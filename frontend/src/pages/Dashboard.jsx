@@ -78,7 +78,7 @@ function Dashboard({ user, onLogout }) {
   ];
 
   const INFRA = [
-    { name: 'Docker', icon: '🐳', status: 'Running', detail: '3 containers' },
+    { name: 'Docker', icon: '🐳', status: 'Running..', detail: '3 containers' },
     { name: 'Nginx', icon: '⚡', status: 'Active', detail: 'Reverse proxy' },
     { name: 'MongoDB', icon: '🍃', status: 'Connected', detail: 'Atlas Cluster' },
     { name: 'Prometheus', icon: '📈', status: 'Scraping', detail: '15s interval' },
@@ -111,7 +111,7 @@ function Dashboard({ user, onLogout }) {
           ].map((card, i) => (
             <div key={card.label} className="stat-card animate-fade-in" style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
               <div className={`stat-icon ${card.iconClass}`}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={card.iconPath}/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={card.iconPath} /></svg>
               </div>
               <div className="stat-content">
                 <span className="stat-label">{card.label}</span>
