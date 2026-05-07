@@ -419,3 +419,4 @@ docker compose down -v --rmi all
 ## 📄 License
 
 This project is built for educational and demonstration purposes.
+# teamsync-devops
