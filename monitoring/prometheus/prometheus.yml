@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────────────────────
+# Prometheus Configuration
+# Scrapes metrics from backend and Nginx
+# ─────────────────────────────────────────────────────────────
+
+global:
+  # How frequently to scrape targets
+  scrape_interval: 15s
+  # How frequently to evaluate rules
+  evaluation_interval: 15s
+
+# Scrape configurations
+scrape_configs:
+  # ─── Prometheus Self-Monitoring ────────────────────────
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # ─── Backend API Metrics ───────────────────────────────
+  # Scrapes /metrics endpoint from the Node.js backend
+  - job_name: 'teamsync-backend'
+    static_configs:
+      - targets: ['backend:5006']
+        labels:
+          service: 'backend'
+          environment: 'production'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # ─── Nginx Metrics (via stub_status) ───────────────────
+  # Requires nginx-prometheus-exporter sidecar
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+        labels:
+          service: 'nginx'
+    metrics_path: '/nginx_status'
+    scrape_interval: 30s
