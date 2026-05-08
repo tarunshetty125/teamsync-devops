@@ -6,20 +6,6 @@ A production-ready SaaS dashboard application demonstrating a complete DevOps pi
 
 ---
 
-## 📋 Table of Contents
-
-- [Architecture Overview](#-architecture-overview)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Local Development Setup](#-local-development-setup)
-- [Docker Deployment](#-docker-deployment)
-- [AWS EC2 Deployment](#-aws-ec2-deployment)
-- [CI/CD Pipeline](#-cicd-pipeline)
-- [Monitoring Setup](#-monitoring-setup)
-- [API Documentation](#-api-documentation)
-- [Screenshots](#-screenshots)
-
----
 
 ## 🏗️ Architecture Overview
 
@@ -325,30 +311,171 @@ Set these in **Settings → Secrets and Variables → Actions**:
 
 ## 📊 Monitoring Setup
 
-### Prometheus
-- **URL**: `http://localhost:9090`
-- **Scrape Interval**: 15 seconds
-- **Targets**: Backend API metrics, Nginx status
-- **Retention**: 7 days
+The monitoring stack is fully **auto-configured on container startup** — no manual setup required. It uses **Prometheus** for metrics collection and **Grafana** for visualization, both wired together via Docker Compose.
 
-#### Key Metrics Collected
-- `http_requests_total` - Total HTTP request count
-- `http_request_duration_seconds` - Request latency histogram
-- `active_connections` - Current active connections
-- `nodejs_*` - Node.js runtime metrics (memory, CPU, event loop)
+---
 
-### Grafana
-- **URL**: `http://localhost:3001`
-- **Default Login**: admin / admin123
-- **Pre-loaded Dashboard**: TeamSync DevOps Dashboard
+### 📁 Monitoring Folder Structure
 
-#### Dashboard Panels
-1. HTTP Request Rate (requests/sec)
-2. Response Time P95 (latency)
-3. Active Connections (gauge)
-4. Total Requests (counter)
-5. Memory Usage (MB)
-6. Node.js Event Loop Lag
+```
+monitoring/
+├── prometheus/
+│   └── prometheus.yml              ← What to scrape & how often
+└── grafana/
+    ├── dashboards/
+    │   └── dashboard.json          ← Pre-built visual dashboard
+    └── provisioning/
+        ├── datasources/
+        │   └── datasource.yml      ← Tells Grafana where to get data
+        └── dashboards/
+            └── dashboard.yml       ← Tells Grafana where to load dashboards from
+```
+
+---
+
+### ⚙️ Step 1 — Prometheus Collects Metrics
+
+**Prometheus** is a metrics collector. It **pulls (scrapes)** data from your services on a schedule defined in `prometheus.yml`.
+
+```yaml
+global:
+  scrape_interval: 15s       # Default: fetch metrics every 15 seconds
+  evaluation_interval: 15s
+```
+
+It scrapes **3 targets**:
+
+| Job Name | Target | What It Collects | Interval |
+|---|---|---|---|
+| `prometheus` | `localhost:9090` | Prometheus own health stats | 15s |
+| `teamsync-backend` | `backend:5006/metrics` | HTTP requests, response times, memory, event loop | **10s** |
+| `nginx` | `nginx:80/nginx_status` | Active connections, request counts | 30s |
+
+The **Node.js backend** exposes a `/metrics` endpoint (via the `prom-client` library) that Prometheus reads. Raw metrics look like:
+
+```
+http_requests_total{method="GET", route="/api/health", status_code="200"} 42
+process_resident_memory_bytes 52428800
+nodejs_eventloop_lag_seconds 0.0021
+```
+
+All scraped data is stored in a **time-series database** (Docker volume: `teamsync-prometheus-data`) and retained for **7 days**.
+
+---
+
+### 📊 Step 2 — Grafana Visualizes It
+
+Grafana is the **dashboard UI**. It reads data from Prometheus using **PromQL queries** and renders them as graphs, gauges, and stat panels. It auto-configures via **provisioning files** on startup.
+
+#### 🔌 `datasource.yml` — Connect to Prometheus
+
+```yaml
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090   # Grafana queries Prometheus internally
+    isDefault: true
+```
+
+`access: proxy` means Grafana's **server** talks to Prometheus — not the browser directly.
+
+#### 📂 `dashboard.yml` — Auto-load Dashboards
+
+```yaml
+providers:
+  - name: 'TeamSync'
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards   # Scan this folder on startup
+```
+
+On startup, Grafana scans this folder and **automatically imports** all `.json` dashboard files. No manual import needed.
+
+#### 🖥️ Dashboard Panels (`dashboard.json`)
+
+The **TeamSync DevOps Dashboard** contains 5 panels:
+
+| Panel | Type | PromQL Query | What It Shows |
+|---|---|---|---|
+| **HTTP Request Rate** | Time series | `rate(http_requests_total[5m])` | Requests/sec over last 5 min, broken down by method, route & status |
+| **Response Time p95** | Time series | `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))` | 95th percentile latency — worst-case response time |
+| **Active Connections** | Stat (big number) | `active_connections` | Live connections at this moment |
+| **Total Requests** | Stat (big number) | `http_requests_total` | All-time request count |
+| **Memory Usage (MB)** | Gauge | `process_resident_memory_bytes / 1024 / 1024` | Node.js RAM usage in MB |
+| **Event Loop Lag** | Time series | `nodejs_eventloop_lag_seconds` | Node.js health — high lag = server under stress |
+
+---
+
+### 🌐 Step 3 — Nginx Routes Both UIs
+
+Both monitoring tools are accessible through **Nginx on port 80** — users never need to hit raw ports:
+
+```nginx
+# Grafana Dashboard → http://localhost/grafana/
+location /grafana/ {
+    proxy_pass http://grafana:3000/;
+}
+
+# Prometheus UI → http://localhost/prometheus/
+location /prometheus/ {
+    proxy_pass http://prometheus:9090/;
+}
+
+# Nginx itself exposes /nginx_status for Prometheus to scrape
+location /nginx_status {
+    stub_status on;
+    allow 127.0.0.1;
+    allow 172.0.0.0/8;
+    deny all;
+}
+```
+
+---
+
+### 🔄 Complete Monitoring Data Flow
+
+```
+Node.js Backend (/metrics endpoint)
+        │
+        │ Prometheus scrapes every 10s
+        ▼
+   Prometheus ─────────────────────────────────────────────────┐
+   (stores 7 days of time-series data)                         │
+        │                                                       │
+        │ Grafana queries via PromQL                            │
+        ▼                                                       │
+   Grafana renders panels                                       │
+   (HTTP rate, p95 latency, memory, event loop)                │
+        │                                                       │
+        │ Served through Nginx                                  │
+        ▼                                                       │
+   Browser: http://localhost/grafana/    ←────────────────────-┘
+            http://localhost/prometheus/
+```
+
+---
+
+### 🔑 Access URLs
+
+| Service | URL | Credentials |
+|---|---|---|
+| Grafana Dashboard | `http://localhost/grafana/` (via Nginx) or `http://localhost:3001` | admin / admin123 |
+| Prometheus UI | `http://localhost/prometheus/` (via Nginx) or `http://localhost:9090` | None required |
+| Raw Metrics Endpoint | `http://localhost/metrics` | None required |
+
+---
+
+### 📌 Key Metrics Reference
+
+| Metric | Type | Description |
+|---|---|---|
+| `http_requests_total` | Counter | Total HTTP requests (labeled by method, route, status) |
+| `http_request_duration_seconds` | Histogram | Request latency distribution |
+| `active_connections` | Gauge | Current number of active connections |
+| `process_resident_memory_bytes` | Gauge | Node.js RSS memory usage |
+| `nodejs_eventloop_lag_seconds` | Gauge | Event loop delay (health indicator) |
+| `nodejs_heap_size_used_bytes` | Gauge | V8 heap memory used |
 
 ---
 
@@ -419,4 +546,135 @@ docker compose down -v --rmi all
 ## 📄 License
 
 This project is built for educational and demonstration purposes.
-# teamsync-devops
+
+---
+
+## 🔗 How Prometheus & Grafana Interact
+
+### 1️⃣ Docker Network — They Can "See" Each Other
+
+Both containers are on the **same Docker network**:
+
+```yaml
+# docker-compose.yml
+networks:
+  - teamsync-network   # ← both prometheus & grafana join this network
+```
+
+Because of this, Grafana can reach Prometheus using its **container name** as a hostname — no IP addresses needed:
+
+```
+http://prometheus:9090
+```
+
+---
+
+### 2️⃣ Grafana Starts AFTER Prometheus
+
+```yaml
+# docker-compose.yml
+grafana:
+  depends_on:
+    - prometheus    # ← Grafana waits for Prometheus to be ready first
+```
+
+---
+
+### 3️⃣ Grafana is Told WHERE Prometheus Is (`datasource.yml`)
+
+```yaml
+# monitoring/grafana/provisioning/datasources/datasource.yml
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090   # ← Grafana points to Prometheus container
+    isDefault: true
+```
+
+This file is **mounted into the Grafana container** via Docker volume:
+
+```yaml
+volumes:
+  - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+```
+
+On startup, Grafana reads this file and **automatically registers Prometheus as a data source** — no manual clicking needed.
+
+---
+
+### 4️⃣ The Actual Communication Flow (Request-by-Request)
+
+```
+┌──────────────┐           ┌──────────────┐           ┌──────────────┐
+│   Browser    │           │   Grafana    │           │  Prometheus  │
+│  (You)       │           │  Container   │           │  Container   │
+└──────┬───────┘           └──────┬───────┘           └──────┬───────┘
+       │                          │                           │
+       │  1. Open Grafana UI      │                           │
+       │─────────────────────────>│                           │
+       │                          │                           │
+       │                          │  2. Send PromQL query     │
+       │                          │  rate(http_requests_      │
+       │                          │   total[5m])              │
+       │                          │──────────────────────────>│
+       │                          │                           │
+       │                          │  3. Return metric data    │
+       │                          │  (JSON time-series)       │
+       │                          │<──────────────────────────│
+       │                          │                           │
+       │  4. Rendered graph/panel │                           │
+       │<─────────────────────────│                           │
+```
+
+> **Key point:** Your browser **never talks to Prometheus directly**. Grafana's server acts as the middleman (`access: proxy`).
+
+---
+
+### 5️⃣ Each Dashboard Panel = One PromQL Query to Prometheus
+
+Every panel in `dashboard.json` sends a **PromQL query** to Prometheus when you open Grafana:
+
+| Panel | Query Sent to Prometheus |
+|---|---|
+| HTTP Request Rate | `rate(http_requests_total[5m])` |
+| Response Time p95 | `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))` |
+| Active Connections | `active_connections` |
+| Total Requests | `http_requests_total` |
+| Memory Usage | `process_resident_memory_bytes / 1024 / 1024` |
+| Event Loop Lag | `nodejs_eventloop_lag_seconds` |
+
+Prometheus receives the query → looks up its stored time-series data → returns JSON → Grafana draws the chart.
+
+---
+
+### 6️⃣ Full Interaction Loop
+
+```
+Your App (Node.js backend)
+    │ exposes /metrics endpoint
+    │
+    ▼ Prometheus scrapes every 10s (PULL model)
+Prometheus STORES time-series data (7 days)
+    │
+    ▼ When you open Grafana (QUERY model)
+Grafana sends PromQL → gets JSON data back
+    │
+    ▼
+Your Browser sees GRAPHS, GAUGES & STATS
+```
+
+---
+
+### 🔑 One-Line Summary
+
+```
+Prometheus = DATABASE  (collects & stores metrics by pulling from your app)
+Grafana    = FRONTEND  (queries Prometheus & displays results as dashboards)
+
+Grafana queries Prometheus the same way a web app queries a database.
+```
+
+- **Prometheus is PULL-based** — it goes to your app to fetch metrics on a schedule
+- **Grafana is QUERY-based** — it asks Prometheus "give me data for this time range" on demand
+- They **never push data to each other** — all communication is request/response
