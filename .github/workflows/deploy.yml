@@ -30,29 +30,29 @@ jobs:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: |
-            client/package-lock.json
-            backend/package-lock.json
+            TeamSync/client/package-lock.json
+            TeamSync/backend/package-lock.json
 
       # ─── Backend Build & Test ───────────────────────────
       - name: 📦 Install Backend Dependencies
-        working-directory: ./backend
+        working-directory: ./TeamSync/backend
         run: npm ci
 
       - name: 🔨 Build Backend (TypeScript)
-        working-directory: ./backend
+        working-directory: ./TeamSync/backend
         run: npm run build
 
       - name: 🧪 Run Backend Linting
-        working-directory: ./backend
+        working-directory: ./TeamSync/backend
         run: echo "✅ Backend code verified"
 
       # ─── Client Build & Test ────────────────────────────
       - name: 📦 Install Client Dependencies
-        working-directory: ./client
+        working-directory: ./TeamSync/client
         run: npm ci
 
       - name: 🔨 Build Client
-        working-directory: ./client
+        working-directory: ./TeamSync/client
         run: npm run build
 
       - name: ✅ Build Verification
@@ -76,15 +76,16 @@ jobs:
 
       - name: 🏗️ Build Client Docker Image
         run: |
-          docker build -t teamsync-client:${{ github.sha }} ./client
+          docker build -t teamsync-client:${{ github.sha }} ./TeamSync/client
           echo "✅ Client image built"
 
       - name: 🏗️ Build Backend Docker Image
         run: |
-          docker build -t teamsync-backend:${{ github.sha }} ./backend
+          docker build -t teamsync-backend:${{ github.sha }} ./TeamSync/backend
           echo "✅ Backend image built"
 
       - name: 🐳 Docker Compose Validation
+        working-directory: ./TeamSync
         run: docker compose config --quiet && echo "✅ Docker Compose config is valid"
 
   # ─── Job 3: Deploy to AWS EC2 ──────────────────────────
