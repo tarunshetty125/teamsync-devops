@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <title>Google Ai Assistant | TeamSync</title>
+    <style>
+        #logoutButton {
+    padding: 5px 10px;
+    font-size: 12px;
+    background-color: #f51111;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#logoutButton i {
+    font-size: 21px; /* smaller icon */
+}
+
+#logoutButton:hover {
+    background-color: #ff1100;
+}
+
+  #work {
+    padding: 5px 10px;
+    font-size: 12px;
+    background-color: #5dc522;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#work i {
+    font-size: 21px; /* smaller icon */
+}
+
+#work:hover {
+    background-color: #2cff02;
+}
+
+
+
+/* Hover Profile Box Styling */
+.profile-box {
+  border: 1px solid rgb(209, 208, 208);
+  position: absolute;
+  background: #1e1e2f;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(81, 45, 168, 0.6);
+  display: none;
+  flex-direction: column;
+  font-size: 14px;
+  min-width: 220px;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.profile-box p {
+  margin: 4px 0;
+  line-height: 1.3;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+    </style>
+   
+</head>
+
+<body>
+
+<!-- Small hover profile box -->
+<div id="profileHoverBox" class="profile-box">
+  <p><strong>Name:</strong> <span id="hoverName"></span></p>
+  <p><strong>Email:</strong> <span id="hoverEmail"></span></p>
+  <p><strong>Last Login:</strong> <span id="hoverLogin"></span></p>
+</div>
+
+
+    <nav class="navbar">
+    <h3 class="navbar__logo">Team Sync Ai assistant ✨ </h3>
+    <div style="display:flex; align-items:center; gap:15px;">
+        <p><img id="prof" style="width: 35px;border-radius: 50%;background-color: whitesmoke;margin-top: 4px;margin-left: 10px;"></p>
+        <span id="welcome" style="color:lavenderblush; font-weight:500;font-size: large;text-transform: capitalize;margin-left: 0px;"></span>
+        <button id="work" class="navbar__button"><i class='bx bx-log-out'></i> Back to Workspace</button>
+       <button id="logoutButton" class="navbar__button"><i class='bx bx-log-out'></i> Logout</button>
+        <button class="navbar__button" id="themeToggler"><i class='bx bx-sun'></i></button>
+    </div>
+</nav>
+
+
+    <header class="header">
+        <div class="header__title">
+            <h1>Hello, There!</h1>
+            <h2>How can I help you today?</h2>
+        </div>
+        <div class="suggests">
+            <div class="suggests__item">
+                <p class="suggests__item-text">
+                   How does the system help with resource allocation ?
+
+                </p>
+                <div class="suggests__item-icon">
+                    <i class='bx bx-stopwatch'></i>
+                </div>
+            </div>
+            <div class="suggests__item">
+                <p class="suggests__item-text">
+                    Help me write an out-of-office email
+                </p>
+                <div class="suggests__item-icon">
+                    <i class='bx bx-edit-alt'></i>
+                </div>
+            </div>
+            <div class="suggests__item">
+                <p class="suggests__item-text">
+                    How is time tracking data used for reporting ?
+                </p>
+                <div class="suggests__item-icon">
+                    <i class='bx bx-compass'></i>
+                </div>
+            </div>
+            <div class="suggests__item">
+                <p class="suggests__item-text">
+                    Show me how to build something by hand
+                </p>
+                <div class="suggests__item-icon">
+                    <i class='bx bx-wrench'></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="chats"></section>
+
+    <section class="prompt">
+        <form action="#" class="prompt__form" novalidate>
+            <div class="prompt__input-wrapper">
+                <input type="text" placeholder="Enter a prompt here" class="prompt__form-input" required>
+                <button class="prompt__form-button" id="sendButton">
+                    <i class='bx bx-send'></i>
+                </button>
+                <button class="prompt__form-button" id="deleteButton">
+                    <i class='bx bx-trash'></i>
+                </button>
+            </div>
+        </form>
+        <p class="prompt__disclaim">
+            Gemini may display inaccurate info, including about people, so double-check its responses.
+        </p>
+    </section>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
+
+<script>
+  const prof = document.getElementById('prof');  
+  const welcome = document.getElementById("welcome");
+  const profileBox = document.getElementById("profileHoverBox");
+  const hoverName = document.getElementById("hoverName");
+  const hoverEmail = document.getElementById("hoverEmail");
+  const hoverLogin = document.getElementById("hoverLogin");
+  const workspace = document.getElementById('work');  
+
+  const userName = localStorage.getItem("user");
+  const userEmail = localStorage.getItem("email") || `${userName?.toLowerCase()}@teamsync.ai`;
+  const loginTime = localStorage.getItem("loginTime") || new Date().toLocaleString();
+
+
+   prof.setAttribute('src',localStorage.getItem('profile'));
+  // Store login time if not already
+  if (!localStorage.getItem("loginTime")) {
+    localStorage.setItem("loginTime", loginTime);
+  }
+
+  hoverName.textContent = userName || "Guest";
+  hoverEmail.textContent = userEmail;
+  hoverLogin.textContent = loginTime;
+
+  // Position the hover box near the text
+  welcome.addEventListener("mouseenter", (e) => {
+    const rect = welcome.getBoundingClientRect();
+    profileBox.style.left = rect.left + "px";
+    profileBox.style.top = rect.bottom + 8 + "px";
+    profileBox.style.display = "flex";
+  });
+
+  welcome.addEventListener("mouseleave", () => {
+    profileBox.style.display = "none";
+  });
+
+
+    // Get user info from localStorage
+    const name = localStorage.getItem("user"); // store name during login or registration
+
+    // Update welcome message
+    const welcomeEl = document.getElementById("welcome");
+    if (name) {
+        welcomeEl.textContent = `${name}! 🎉`;
+    } else{
+         window.location.href = "login.html"; 
+    }
+
+    // Logout functionality
+    const logoutBtn = document.getElementById("logoutButton");
+    logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("profile");
+
+        window.location.href = "login.html"; 
+    });
+   
+    workspace.addEventListener("click", () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("profile");
+        window.location.href = localStorage.getItem('workspace'); 
+        localStorage.removeItem("workspace");
+    });
+ 
+
+</script>
