@@ -107,11 +107,12 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
           script: |
-            # Navigate to project directory
+            # Navigate to repo root and pull latest
             cd /home/ubuntu/TeamSync
-
-            # Pull latest code
             git pull origin main
+
+            # Navigate to project directory
+            cd /home/ubuntu/TeamSync/TeamSync
 
             # Create .env file from secrets
             cat > .env << EOF
@@ -151,7 +152,7 @@ jobs:
           command_timeout: 5m
           script: |
             echo "─── Container Status ───"
-            docker compose -f /home/ubuntu/TeamSync/docker-compose.yml ps
+            docker compose -f /home/ubuntu/TeamSync/TeamSync/docker-compose.yml ps
             echo ""
             echo "─── Health Check ───"
             curl -s http://localhost/api/health | head -c 200
