@@ -30,29 +30,29 @@ jobs:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: |
-            TeamSync/client/package-lock.json
-            TeamSync/backend/package-lock.json
+            client/package-lock.json
+            backend/package-lock.json
 
       # ─── Backend Build & Test ───────────────────────────
       - name: 📦 Install Backend Dependencies
-        working-directory: ./TeamSync/backend
+        working-directory: ./backend
         run: npm ci
 
       - name: 🔨 Build Backend (TypeScript)
-        working-directory: ./TeamSync/backend
+        working-directory: ./backend
         run: npm run build
 
       - name: 🧪 Run Backend Linting
-        working-directory: ./TeamSync/backend
+        working-directory: ./backend
         run: echo "✅ Backend code verified"
 
       # ─── Client Build & Test ────────────────────────────
       - name: 📦 Install Client Dependencies
-        working-directory: ./TeamSync/client
+        working-directory: ./client
         run: npm ci
 
       - name: 🔨 Build Client
-        working-directory: ./TeamSync/client
+        working-directory: ./client
         run: npm run build
 
       - name: ✅ Build Verification
@@ -76,16 +76,15 @@ jobs:
 
       - name: 🏗️ Build Client Docker Image
         run: |
-          docker build -t teamsync-client:${{ github.sha }} ./TeamSync/client
+          docker build -t teamsync-client:${{ github.sha }} ./client
           echo "✅ Client image built"
 
       - name: 🏗️ Build Backend Docker Image
         run: |
-          docker build -t teamsync-backend:${{ github.sha }} ./TeamSync/backend
+          docker build -t teamsync-backend:${{ github.sha }} ./backend
           echo "✅ Backend image built"
 
       - name: 🐳 Docker Compose Validation
-        working-directory: ./TeamSync
         run: docker compose config --quiet && echo "✅ Docker Compose config is valid"
 
   # ─── Job 3: Deploy to AWS EC2 ──────────────────────────
@@ -107,12 +106,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
           script: |
-            # Navigate to repo root and pull latest
-            cd /home/ubuntu/TeamSync
-            git pull origin main
-
             # Navigate to project directory
-            cd /home/ubuntu/TeamSync/TeamSync
+            cd /home/ubuntu/TeamSync
+
+            # Pull latest code
+            git pull origin main
 
             # Create .env file from secrets
             cat > .env << EOF
@@ -152,7 +150,7 @@ jobs:
           command_timeout: 5m
           script: |
             echo "─── Container Status ───"
-            docker compose -f /home/ubuntu/TeamSync/TeamSync/docker-compose.yml ps
+            docker compose -f /home/ubuntu/TeamSync/docker-compose.yml ps
             echo ""
             echo "─── Health Check ───"
             curl -s http://localhost/api/health | head -c 200
