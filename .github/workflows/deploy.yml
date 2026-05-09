@@ -102,7 +102,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # Navigate to project directory
-            cd /home/ubuntu/teamsync
+            cd /home/ubuntu/teamsync-devops
 
             # Pull latest code
             git pull origin main
@@ -135,7 +135,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "─── Container Status ───"
-            docker compose -f /home/ubuntu/teamsync/docker-compose.yml ps
+            docker compose -f /home/ubuntu/teamsync-devops/docker-compose.yml ps
             echo ""
             echo "─── Health Check ───"
             curl -s http://localhost/api/health | head -c 200

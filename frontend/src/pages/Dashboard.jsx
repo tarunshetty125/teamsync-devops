@@ -94,7 +94,7 @@ function Dashboard({ user, onLogout }) {
         <header className="dashboard-header">
           <div className="header-left">
             <h1>Dashboard Overview</h1>
-            <p className="header-subtitle">Welcome back User, {user?.name || 'User'} 👋</p>
+            <p className="header-subtitle">Welcome back XXXXXXXXXS, {user?.name || 'User'} 👋</p>
           </div>
           <div className="header-right">
             <div className="header-status"><span className="status-dot status-dot-live"></span><span>All Systems Operational</span></div>
