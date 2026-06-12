@@ -4,6 +4,7 @@ import useWorkspaceId from "@/hooks/use-workspace-id";
 import { getAvatarColor, getAvatarFallbackText } from "@/lib/helper";
 import { format } from "date-fns";
 import { Loader } from "lucide-react";
+import PresenceIndicator from "@/components/realtime/presence-indicator";
 
 const RecentMembers = () => {
   const workspaceId = useWorkspaceId();
@@ -22,13 +23,13 @@ const RecentMembers = () => {
       ) : null}
 
       <ul role="list" className="space-y-3">
-        {members.map((member, index) => {
+        {members.map((member) => {
           const name = member?.userId?.name || "";
           const initials = getAvatarFallbackText(name);
           const avatarColor = getAvatarColor(name);
           return (
             <li
-              key={index}
+              key={member._id}
               role="listitem"
               className="flex items-center gap-4 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
             >
@@ -47,9 +48,12 @@ const RecentMembers = () => {
 
               {/* Member Details */}
               <div className="flex flex-col">
-                <p className="text-sm font-medium text-gray-900">
-                  {member.userId.name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-900">
+                    {member.userId.name}
+                  </p>
+                  <PresenceIndicator userId={member.userId._id} />
+                </div>
                 <p className="text-sm text-gray-500">{member.role.name}</p>
               </div>
 

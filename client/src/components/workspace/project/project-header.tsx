@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams } from "react-router-dom";
 import CreateTaskDialog from "../task/create-task-dialog";
 import EditProjectDialog from "./edit-project-dialog";

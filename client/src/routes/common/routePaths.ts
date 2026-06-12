@@ -12,8 +12,13 @@ export const PROTECTED_ROUTES = {
   WORKSPACE: "/workspace/:workspaceId",
   TASKS: "/workspace/:workspaceId/tasks",
   CALENDAR: "/workspace/:workspaceId/calendar",
+  TIMELINE: "/workspace/:workspaceId/timeline",
+  ROADMAP: "/workspace/:workspaceId/roadmap",
+  GANTT: "/workspace/:workspaceId/gantt",
+  PRODUCTIVITY: "/workspace/:workspaceId/productivity",
   MEMBERS: "/workspace/:workspaceId/members",
   SETTINGS: "/workspace/:workspaceId/settings",
+  PROFILE: "/workspace/:workspaceId/profile",
   PROJECT_DETAILS: "/workspace/:workspaceId/project/:projectId",
 };
 

@@ -1,4 +1,4 @@
-import { ChevronDown, Loader } from "lucide-react";
+import { ChevronDown, Loader, Trash2, UserX } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,19 @@ import { useAuthContext } from "@/context/auth-provider";
 import useWorkspaceId from "@/hooks/use-workspace-id";
 import useGetWorkspaceMembers from "@/hooks/api/use-get-workspace-members";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { changeWorkspaceMemberRoleMutationFn } from "@/lib/api";
+import {
+  assignMemberRoleMutationFn,
+  deactivateMemberMutationFn,
+  removeMemberMutationFn,
+} from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { Permissions } from "@/constant";
+import PresenceIndicator from "@/components/realtime/presence-indicator";
 const AllMembers = () => {
   const { user, hasPermission } = useAuthContext();
 
-  const canChangeMemberRole = hasPermission(Permissions.CHANGE_MEMBER_ROLE);
+  const canChangeMemberRole = hasPermission(Permissions.MANAGE_ROLES);
+  const canRemoveMember = hasPermission(Permissions.REMOVE_MEMBER);
 
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceId();
@@ -37,17 +43,17 @@ const AllMembers = () => {
   const roles = data?.roles || [];
 
   const { mutate, isPending: isLoading } = useMutation({
-    mutationFn: changeWorkspaceMemberRoleMutationFn,
+    mutationFn: assignMemberRoleMutationFn,
   });
+  const deactivateMember = useMutation({ mutationFn: deactivateMemberMutationFn });
+  const removeMember = useMutation({ mutationFn: removeMemberMutationFn });
 
   const handleSelect = (roleId: string, memberId: string) => {
     if (!roleId || !memberId) return;
     const payload = {
       workspaceId,
-      data: {
-        roleId,
-        memberId,
-      },
+      roleId,
+      memberId,
     };
     mutate(payload, {
       onSuccess: () => {
@@ -56,7 +62,7 @@ const AllMembers = () => {
         });
         toast({
           title: "Success",
-          description: "Member's role changed successfully",
+        description: "Member's role changed successfully",
           variant: "success",
         });
       },
@@ -80,8 +86,12 @@ const AllMembers = () => {
         const name = member.userId?.name;
         const initials = getAvatarFallbackText(name);
         const avatarColor = getAvatarColor(name);
+        const isCurrentUser = member.userId._id === user?._id;
         return (
-          <div className="flex items-center justify-between space-x-4">
+          <div
+            key={member._id}
+            className="flex items-center justify-between space-x-4"
+          >
             <div className="flex items-center space-x-4">
               <Avatar className="h-8 w-8">
                 <AvatarImage
@@ -93,9 +103,33 @@ const AllMembers = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium leading-none">{name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium leading-none">{name}</p>
+                  <PresenceIndicator userId={member.userId._id} />
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {member.userId.email}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {member.status || "ACTIVE"} · {member.capacityHoursPerWeek ?? 40}h/week · Joined{" "}
+                  {member.joinedAt
+                    ? new Intl.DateTimeFormat(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }).format(new Date(member.joinedAt))
+                    : "Unknown"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Last active{" "}
+                  {member.lastActiveAt
+                    ? new Intl.DateTimeFormat(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "numeric",
+                      }).format(new Date(member.lastActiveAt))
+                    : "Never"}
                 </p>
               </div>
             </div>
@@ -109,11 +143,12 @@ const AllMembers = () => {
                     disabled={
                       isLoading ||
                       !canChangeMemberRole ||
-                      member.userId._id === user?._id
+                      isCurrentUser ||
+                      member.role.name === "OWNER"
                     }
                   >
                     {member.role.name?.toLowerCase()}{" "}
-                    {canChangeMemberRole && member.userId._id !== user?._id && (
+                    {canChangeMemberRole && !isCurrentUser && member.role.name !== "OWNER" && (
                       <ChevronDown className="text-muted-foreground" />
                     )}
                   </Button>
@@ -143,7 +178,7 @@ const AllMembers = () => {
                                       onSelect={() => {
                                         handleSelect(
                                           role._id,
-                                          member.userId._id
+                                          member._id
                                         );
                                       }}
                                     >
@@ -168,6 +203,46 @@ const AllMembers = () => {
                   </PopoverContent>
                 )}
               </Popover>
+              {canRemoveMember && !isCurrentUser && member.role.name !== "OWNER" && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={deactivateMember.isPending}
+                    onClick={() =>
+                      deactivateMember.mutate(
+                        { workspaceId, memberId: member._id },
+                        {
+                          onSuccess: () =>
+                            queryClient.invalidateQueries({
+                              queryKey: ["members", workspaceId],
+                            }),
+                        }
+                      )
+                    }
+                  >
+                    <UserX className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={removeMember.isPending}
+                    onClick={() =>
+                      removeMember.mutate(
+                        { workspaceId, memberId: member._id },
+                        {
+                          onSuccess: () =>
+                            queryClient.invalidateQueries({
+                              queryKey: ["members", workspaceId],
+                            }),
+                        }
+                      )
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         );

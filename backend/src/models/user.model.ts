@@ -6,6 +6,9 @@ export interface UserDocument extends Document {
   email: string;
   password?: string;
   profilePicture: string | null;
+  bio: string | null;
+  timezone: string | null;
+  preferences?: Record<string, unknown>;
   isActive: boolean;
   lastLogin: Date | null;
   createdAt: Date;
@@ -29,10 +32,25 @@ const userSchema = new Schema<UserDocument>(
       trim: true,
       lowercase: true,
     },
-    password: { type: String, select: true },
+    password: { type: String, select: false },
     profilePicture: {
       type: String,
       default: null,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: null,
+    },
+    timezone: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    preferences: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
     currentWorkspace: {
       type: mongoose.Schema.Types.ObjectId,
@@ -43,6 +61,7 @@ const userSchema = new Schema<UserDocument>(
   },
   {
     timestamps: true,
+    minimize: false,
   }
 );
 
@@ -62,8 +81,14 @@ userSchema.methods.omitPassword = function (): Omit<UserDocument, "password"> {
 };
 
 userSchema.methods.comparePassword = async function (value: string) {
+  if (!this.password) {
+    return false;
+  }
+
   return compareValue(value, this.password);
 };
+
+userSchema.index({ currentWorkspace: 1 });
 
 const UserModel = mongoose.model<UserDocument>("User", userSchema);
 export default UserModel;

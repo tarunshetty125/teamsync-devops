@@ -17,16 +17,6 @@ export class AppError extends Error {
   }
 }
 
-export class HttpException extends AppError {
-  constructor(
-    message = "Http Exception Error",
-    statusCode: HttpStatusCodeType,
-    errorCode?: ErrorCodeEnumType
-  ) {
-    super(message, statusCode, errorCode);
-  }
-}
-
 export class InternalServerException extends AppError {
   constructor(
     message = "Internal Server Error",
@@ -65,6 +55,16 @@ export class UnauthorizedException extends AppError {
     super(
       message,
       HTTPSTATUS.UNAUTHORIZED,
+      errorCode || ErrorCodeEnum.ACCESS_UNAUTHORIZED
+    );
+  }
+}
+
+export class ForbiddenException extends AppError {
+  constructor(message = "Forbidden", errorCode?: ErrorCodeEnumType) {
+    super(
+      message,
+      HTTPSTATUS.FORBIDDEN,
       errorCode || ErrorCodeEnum.ACCESS_UNAUTHORIZED
     );
   }

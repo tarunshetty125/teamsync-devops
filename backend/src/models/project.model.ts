@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export interface ProjectDocument extends Document {
+interface ProjectDocument extends Document {
   name: string;
   description: string | null; // Optional description for the project
   emoji: string;
@@ -37,6 +37,19 @@ const projectSchema = new Schema<ProjectDocument>(
   },
   {
     timestamps: true,
+  }
+);
+
+projectSchema.index({ workspace: 1, createdAt: -1 });
+projectSchema.index({ workspace: 1, createdBy: 1 });
+projectSchema.index(
+  { workspace: 1, name: "text", description: "text" },
+  {
+    name: "project_workspace_text",
+    weights: {
+      name: 10,
+      description: 3,
+    },
   }
 );
 

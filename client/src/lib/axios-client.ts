@@ -11,6 +11,24 @@ const options = {
 
 const API = axios.create(options);
 
+const getCookieValue = (name: string) => {
+  const match = document.cookie
+    .split("; ")
+    .find((cookie) => cookie.startsWith(`${name}=`));
+
+  return match ? decodeURIComponent(match.split("=")[1]) : undefined;
+};
+
+API.interceptors.request.use((config) => {
+  const csrfToken = getCookieValue("XSRF-TOKEN");
+
+  if (csrfToken) {
+    config.headers["X-CSRF-Token"] = csrfToken;
+  }
+
+  return config;
+});
+
 API.interceptors.response.use(
   (response) => {
     return response;

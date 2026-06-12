@@ -10,39 +10,42 @@ import {
   loginOrCreateAccountService,
   verifyUserService,
 } from "../services/auth.service";
+import UserModel from "../models/user.model";
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: config.GOOGLE_CLIENT_ID,
-      clientSecret: config.GOOGLE_CLIENT_SECRET,
-      callbackURL: config.GOOGLE_CALLBACK_URL,
-      scope: ["profile", "email"],
-      passReqToCallback: true,
-    },
-    async (req: Request, accessToken, refreshToken, profile, done) => {
-      try {
-        const { email, sub: googleId, picture } = profile._json;
-        console.log(profile, "profile");
-        console.log(googleId, "googleId");
-        if (!googleId) {
-          throw new NotFoundException("Google ID (sub) is missing");
+if (config.GOOGLE_OAUTH_ENABLED) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: config.GOOGLE_CLIENT_ID,
+        clientSecret: config.GOOGLE_CLIENT_SECRET,
+        callbackURL: config.GOOGLE_CALLBACK_URL,
+        scope: ["profile", "email"],
+        passReqToCallback: true,
+        state: true,
+      },
+      async (req: Request, accessToken, refreshToken, profile, done) => {
+        try {
+          const { email, sub: googleId, picture } = profile._json;
+
+          if (!googleId) {
+            throw new NotFoundException("Google ID (sub) is missing");
+          }
+
+          const { user } = await loginOrCreateAccountService({
+            provider: ProviderEnum.GOOGLE,
+            displayName: profile.displayName,
+            providerId: googleId,
+            picture: picture,
+            email: email,
+          });
+          done(null, user);
+        } catch (error) {
+          done(error, false);
         }
-
-        const { user } = await loginOrCreateAccountService({
-          provider: ProviderEnum.GOOGLE,
-          displayName: profile.displayName,
-          providerId: googleId,
-          picture: picture,
-          email: email,
-        });
-        done(null, user);
-      } catch (error) {
-        done(error, false);
       }
-    }
-  )
-);
+    )
+  );
+}
 
 passport.use(
   new LocalStrategy(
@@ -55,12 +58,21 @@ passport.use(
       try {
         const user = await verifyUserService({ email, password });
         return done(null, user);
-      } catch (error: any) {
-        return done(error, false, { message: error?.message });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Invalid email or password";
+        return done(error, false, { message });
       }
     }
   )
 );
 
-passport.serializeUser((user: any, done) => done(null, user));
-passport.deserializeUser((user: any, done) => done(null, user));
+passport.serializeUser((user: Express.User, done) => done(null, user._id));
+passport.deserializeUser(async (userId: string, done) => {
+  try {
+    const user = await UserModel.findById(userId).select("-password");
+    done(null, user || false);
+  } catch (error) {
+    done(error, false);
+  }
+});

@@ -9,18 +9,32 @@ import {
   getWorkspaceMembersController,
   updateWorkspaceByIdController,
 } from "../controllers/workspace.controller";
+import { writeApiRateLimiter } from "../middlewares/rateLimit.middleware";
 
 const workspaceRoutes = Router();
 
-workspaceRoutes.post("/create/new", createWorkspaceController);
-workspaceRoutes.put("/update/:id", updateWorkspaceByIdController);
+workspaceRoutes.post(
+  "/create/new",
+  writeApiRateLimiter,
+  createWorkspaceController
+);
+workspaceRoutes.put(
+  "/update/:id",
+  writeApiRateLimiter,
+  updateWorkspaceByIdController
+);
 
 workspaceRoutes.put(
   "/change/member/role/:id",
+  writeApiRateLimiter,
   changeWorkspaceMemberRoleController
 );
 
-workspaceRoutes.delete("/delete/:id", deleteWorkspaceByIdController);
+workspaceRoutes.delete(
+  "/delete/:id",
+  writeApiRateLimiter,
+  deleteWorkspaceByIdController
+);
 
 workspaceRoutes.get("/all", getAllWorkspacesUserIsMemberController);
 

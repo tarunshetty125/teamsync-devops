@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
   createProjectSchema,
+  projectPaginationSchema,
   projectIdSchema,
   updateProjectSchema,
 } from "../validation/project.validation";
@@ -18,6 +19,7 @@ import {
   updateProjectService,
 } from "../services/project.service";
 import { HTTPSTATUS } from "../config/http.config";
+import { buildRequestContext } from "../utils/request-context";
 
 export const createProjectController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -28,7 +30,12 @@ export const createProjectController = asyncHandler(
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
     roleGuard(role, [Permissions.CREATE_PROJECT]);
 
-    const { project } = await createProjectService(userId, workspaceId, body);
+    const { project } = await createProjectService(
+      userId,
+      workspaceId,
+      body,
+      buildRequestContext(req, workspaceId)
+    );
 
     return res.status(HTTPSTATUS.CREATED).json({
       message: "Project created successfully",
@@ -45,8 +52,7 @@ export const getAllProjectsInWorkspaceController = asyncHandler(
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
     roleGuard(role, [Permissions.VIEW_ONLY]);
 
-    const pageSize = parseInt(req.query.pageSize as string) || 10;
-    const pageNumber = parseInt(req.query.pageNumber as string) || 1;
+    const { pageSize, pageNumber } = projectPaginationSchema.parse(req.query);
 
     const { projects, totalCount, totalPages, skip } =
       await getProjectsInWorkspaceService(workspaceId, pageSize, pageNumber);
@@ -145,7 +151,7 @@ export const deleteProjectController = asyncHandler(
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
     roleGuard(role, [Permissions.DELETE_PROJECT]);
 
-    await deleteProjectService(workspaceId, projectId);
+    await deleteProjectService(workspaceId, projectId, userId?.toString());
 
     return res.status(HTTPSTATUS.OK).json({
       message: "Project deleted successfully",

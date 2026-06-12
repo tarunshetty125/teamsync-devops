@@ -34,6 +34,7 @@ import { editTaskMutationFn } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { TaskType } from "@/types/api.type";
+import PresenceIndicator from "@/components/realtime/presence-indicator";
 
 export default function EditTaskForm({ task, onClose }: { task: TaskType; onClose: () => void }) {
   const queryClient = useQueryClient();
@@ -48,7 +49,12 @@ export default function EditTaskForm({ task, onClose }: { task: TaskType; onClos
 
   // Members Dropdown Options
   const membersOptions = members.map((member) => ({
-    label: member.userId?.name || "Unknown",
+    label: (
+      <span className="inline-flex items-center gap-2">
+        <span>{member.userId?.name || "Unknown"}</span>
+        <PresenceIndicator userId={member.userId?._id} />
+      </span>
+    ),
     value: member.userId?._id || "",
   }));
 

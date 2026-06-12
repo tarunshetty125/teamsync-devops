@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,34 @@ function formatDate(d: Date) {
   return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+function buildCalendarCells(year: number, month: number) {
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const cells: { date: Date; inMonth: boolean }[] = [];
+
+  for (let i = firstDay - 1; i >= 0; i--) {
+    cells.push({
+      date: new Date(year, month - 1, daysInPrevMonth - i),
+      inMonth: false,
+    });
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ date: new Date(year, month, d), inMonth: true });
+  }
+
+  const remaining = 42 - cells.length;
+  for (let d = 1; d <= remaining; d++) {
+    cells.push({
+      date: new Date(year, month + 1, d),
+      inMonth: false,
+    });
+  }
+
+  return cells;
+}
+
 // ─── component ────────────────────────────────────────────
 const CalendarView = () => {
   const workspaceId = useWorkspaceId();
@@ -72,74 +100,61 @@ const CalendarView = () => {
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(today);
 
-  // Fetch ALL tasks (large page to cover the month)
-  const { data, isLoading } = useQuery({
-    queryKey: ["all-tasks", workspaceId, "calendar"],
-    queryFn: () =>
-      getAllTasksQueryFn({ workspaceId, pageNumber: 1, pageSize: 200 }),
-    staleTime: 0,
-  });
-
-  const tasks: TaskType[] = data?.tasks || [];
-
-  // ─ group tasks by date string (YYYY-MM-DD) ─
-  const tasksByDate = useMemo(() => {
-    const map: Record<string, TaskType[]> = {};
-    tasks.forEach((t) => {
-      if (!t.dueDate) return;
-      const d = new Date(t.dueDate);
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      (map[key] ??= []).push(t);
-    });
-    return map;
-  }, [tasks]);
-
-  // ─ upcoming tasks (due today or later, sorted ascending) ─
-  const upcomingTasks = useMemo(() => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    return tasks
-      .filter((t) => {
-        if (!t.dueDate) return false;
-        const d = new Date(t.dueDate);
-        d.setHours(0, 0, 0, 0);
-        return d >= now && t.status !== "DONE";
-      })
-      .sort(
-        (a, b) =>
-          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-      );
-  }, [tasks]);
-
   // ─ calendar grid ─
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const calendarCells = buildCalendarCells(year, month);
 
-  const calendarCells: { date: Date; inMonth: boolean }[] = [];
+  const visibleStart = new Date(calendarCells[0].date);
+  visibleStart.setHours(0, 0, 0, 0);
 
-  // previous month padding
-  for (let i = firstDay - 1; i >= 0; i--) {
-    calendarCells.push({
-      date: new Date(year, month - 1, daysInPrevMonth - i),
-      inMonth: false,
-    });
-  }
-  // current month
-  for (let d = 1; d <= daysInMonth; d++) {
-    calendarCells.push({ date: new Date(year, month, d), inMonth: true });
-  }
-  // next month padding
-  const remaining = 42 - calendarCells.length;
-  for (let d = 1; d <= remaining; d++) {
-    calendarCells.push({
-      date: new Date(year, month + 1, d),
-      inMonth: false,
-    });
-  }
+  const visibleEnd = new Date(calendarCells[calendarCells.length - 1].date);
+  visibleEnd.setHours(23, 59, 59, 999);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: [
+      "all-tasks",
+      workspaceId,
+      "calendar",
+      visibleStart.toISOString(),
+      visibleEnd.toISOString(),
+    ],
+    queryFn: () =>
+      getAllTasksQueryFn({
+        workspaceId,
+        dueDateFrom: visibleStart.toISOString(),
+        dueDateTo: visibleEnd.toISOString(),
+        pageNumber: 1,
+        pageSize: 100,
+      }),
+    enabled: Boolean(workspaceId),
+    staleTime: 0,
+  });
+
+  const tasks: TaskType[] = data?.tasks ?? [];
+
+  const tasksByDate: Record<string, TaskType[]> = {};
+  tasks.forEach((task) => {
+    if (!task.dueDate) return;
+    const dueDate = new Date(task.dueDate);
+    const key = `${dueDate.getFullYear()}-${dueDate.getMonth()}-${dueDate.getDate()}`;
+    (tasksByDate[key] ??= []).push(task);
+  });
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const upcomingTasks = tasks
+    .filter((task) => {
+      if (!task.dueDate) return false;
+      const dueDate = new Date(task.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+      return dueDate >= todayStart && task.status !== "DONE";
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    );
 
   const getTasksForDate = (d: Date) => {
     const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -199,6 +214,11 @@ const CalendarView = () => {
         {isLoading ? (
           <div className="h-96 flex items-center justify-center text-muted-foreground">
             Loading tasks…
+          </div>
+        ) : isError ? (
+          <div className="h-96 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <AlertCircle className="h-8 w-8" />
+            <p className="text-sm">Unable to load calendar tasks.</p>
           </div>
         ) : (
           <div className="grid grid-cols-7">

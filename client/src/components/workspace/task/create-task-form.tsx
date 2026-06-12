@@ -41,6 +41,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createTaskMutationFn } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
+import PresenceIndicator from "@/components/realtime/presence-indicator";
 
 export default function CreateTaskForm(props: {
   projectId?: string;
@@ -92,6 +93,7 @@ export default function CreateTaskForm(props: {
             <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
           </Avatar>
           <span>{name}</span>
+          <PresenceIndicator userId={member.userId._id} />
         </div>
       ),
       value: member.userId._id,

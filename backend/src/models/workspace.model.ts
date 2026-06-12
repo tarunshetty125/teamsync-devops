@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { generateInviteCode } from "../utils/uuid";
 
-export interface WorkspaceDocument extends Document {
+interface WorkspaceDocument extends Document {
   name: string;
   description: string;
   owner: mongoose.Types.ObjectId;
@@ -34,6 +34,8 @@ const workspaceSchema = new Schema<WorkspaceDocument>(
 workspaceSchema.methods.resetInviteCode = function () {
   this.inviteCode = generateInviteCode();
 };
+
+workspaceSchema.index({ owner: 1 });
 
 const WorkspaceModel = mongoose.model<WorkspaceDocument>(
   "Workspace",

@@ -16,3 +16,4 @@ yarn-error.log
 # Ignore build artifacts or any compiled files (if you use TypeScript or other compilers)
 build/
 dist/
+uploads/

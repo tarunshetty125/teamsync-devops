@@ -39,9 +39,14 @@ const SignUp = () => {
     email: z.string().trim().email("Invalid email address").min(1, {
       message: "Workspace name is required",
     }),
-    password: z.string().trim().min(1, {
-      message: "Password is required",
-    }),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password must be at most 128 characters")
+      .regex(/[a-z]/, "Password must include a lowercase letter")
+      .regex(/[A-Z]/, "Password must include an uppercase letter")
+      .regex(/[0-9]/, "Password must include a number")
+      .regex(/[^A-Za-z0-9]/, "Password must include a special character"),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -68,8 +73,9 @@ const SignUp = () => {
           navigate("/");
         }, 500);
       },
-      onError: (error: any) => {
-        const errorMessage = error?.message || error?.response?.data?.message || "Failed to create account";
+      onError: (error: unknown) => {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to create account";
         toast({
           title: "Sign up failed",
           description: errorMessage,

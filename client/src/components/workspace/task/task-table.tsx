@@ -16,6 +16,7 @@ import useGetProjectsInWorkspaceQuery from "@/hooks/api/use-get-projects";
 import useGetWorkspaceMembers from "@/hooks/api/use-get-workspace-members";
 import { getAvatarColor, getAvatarFallbackText } from "@/lib/helper";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PresenceIndicator from "@/components/realtime/presence-indicator";
 
 type Filters = ReturnType<typeof useTaskTableFilter>[0];
 type SetFilters = ReturnType<typeof useTaskTableFilter>[1];
@@ -143,6 +144,7 @@ const DataTableFilterToolbar: FC<DataTableFilterToolbarProps> = ({
             <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
           </Avatar>
           <span>{name}</span>
+          <PresenceIndicator userId={member.userId._id} />
         </div>
       ),
       value: member.userId._id,

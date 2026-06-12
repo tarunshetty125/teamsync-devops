@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Row } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MessageSquare, MoreHorizontal, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,8 @@ import { deleteTaskMutationFn } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import EditTaskDialog from "../edit-task-dialog"; // Import the Edit Dialog
 
+const TaskDetailsDialog = lazy(() => import("../task-details-dialog"));
+
 interface DataTableRowActionsProps {
   row: Row<TaskType>;
 }
@@ -26,6 +28,7 @@ interface DataTableRowActionsProps {
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const [openDeleteDialog, setOpenDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false); // State for edit dialog
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
 
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceId();
@@ -63,7 +66,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuContent align="end" className="w-[190px]">
+          <DropdownMenuItem className="cursor-pointer" onClick={() => setOpenDetailsDialog(true)}>
+            <MessageSquare className="w-4 h-4 mr-2" /> Details & Comments
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           {/* Edit Task Option */}
           <DropdownMenuItem className="cursor-pointer" onClick={() => setOpenEditDialog(true)}>
             <Pencil className="w-4 h-4 mr-2" /> Edit Task
@@ -83,6 +90,16 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
 
       {/* Edit Task Dialog */}
       <EditTaskDialog task={task} isOpen={openEditDialog} onClose={() => setOpenEditDialog(false)} />
+
+      {openDetailsDialog && (
+        <Suspense fallback={null}>
+          <TaskDetailsDialog
+            task={task}
+            isOpen={openDetailsDialog}
+            onClose={() => setOpenDetailsDialog(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Delete Task Confirmation Dialog */}
       <ConfirmDialog

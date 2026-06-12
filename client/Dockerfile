@@ -4,12 +4,12 @@
 # ─────────────────────────────────────────────────────────────
 
 # Stage 1: Build the React app
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
 # Build argument for API base URL (baked into the JS bundle at build time)
-ARG VITE_API_BASE_URL=http://teamsyncin.duckdns.org/api/v1
+ARG VITE_API_BASE_URL=https://teamsyncin.duckdns.org/api/v1
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Copy package files for dependency caching

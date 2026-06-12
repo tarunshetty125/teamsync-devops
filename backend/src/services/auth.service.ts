@@ -12,8 +12,6 @@ import {
 import MemberModel from "../models/member.model";
 import { ProviderEnum } from "../enums/account-provider.enum";
 
-import { Sendemail } from "../controllers/mail.send";
-
 export const loginOrCreateAccountService = async (data: {
   provider: string;
   displayName: string;
@@ -27,7 +25,6 @@ export const loginOrCreateAccountService = async (data: {
 
   try {
     session.startTransaction();
-    console.log("Started Session...");
 
     let user = await UserModel.findOne({ email }).session(session);
 
@@ -57,6 +54,7 @@ export const loginOrCreateAccountService = async (data: {
 
       const ownerRole = await RoleModel.findOne({
         name: Roles.OWNER,
+        isSystem: true,
       }).session(session);
 
       if (!ownerRole) {
@@ -75,13 +73,10 @@ export const loginOrCreateAccountService = async (data: {
       await user.save({ session });
     }
     await session.commitTransaction();
-    session.endSession();
-    console.log("End Session...");
 
     return { user };
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
     throw error;
   } finally {
     session.endSession();
@@ -111,10 +106,6 @@ export const registerUserService = async (body: {
     });
     
     await user.save({ session });
-
-
-    // send email  
-    Sendemail(user.name,user.email);
   
 
     const account = new AccountModel({
@@ -134,6 +125,7 @@ export const registerUserService = async (body: {
 
     const ownerRole = await RoleModel.findOne({
       name: Roles.OWNER,
+      isSystem: true,
     }).session(session);
 
     if (!ownerRole) {
@@ -152,8 +144,6 @@ export const registerUserService = async (body: {
     await user.save({ session });
 
     await session.commitTransaction();
-    session.endSession();
-    console.log("End Session...");
 
     return {
       userId: user._id,
@@ -161,9 +151,10 @@ export const registerUserService = async (body: {
     };
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
 
     throw error;
+  } finally {
+    session.endSession();
   }
 };
 
@@ -181,7 +172,7 @@ export const verifyUserService = async ({
     throw new NotFoundException("Invalid email or password");
   }
 
-  const user = await UserModel.findById(account.userId);
+  const user = await UserModel.findById(account.userId).select("+password");
 
   if (!user) {
     throw new NotFoundException("User not found for the given account");

@@ -3,6 +3,7 @@ import { HTTPSTATUS } from "../config/http.config";
 import { AppError } from "../utils/appError";
 import { z, ZodError } from "zod";
 import { ErrorCodeEnum } from "../enums/error-code.enum";
+import { config } from "../config/app.config";
 
 const formatZodError = (res: Response, error: z.ZodError) => {
   const errors = error?.issues?.map((err) => ({
@@ -22,7 +23,22 @@ export const errorHandler: ErrorRequestHandler = (
   res,
   next
 ): any => {
-  console.error(`Error Occured on PATH: ${req.path} `, error);
+  const isOperationalError =
+    error instanceof AppError ||
+    error instanceof ZodError ||
+    error instanceof SyntaxError;
+
+  if (
+    config.NODE_ENV !== "test" &&
+    (!isOperationalError || !config.IS_PRODUCTION)
+  ) {
+    console.error("Request error", {
+      method: req.method,
+      path: req.path,
+      message: error?.message,
+      stack: config.IS_PRODUCTION ? undefined : error?.stack,
+    });
+  }
 
   if (error instanceof SyntaxError) {
     return res.status(HTTPSTATUS.BAD_REQUEST).json({
@@ -43,6 +59,8 @@ export const errorHandler: ErrorRequestHandler = (
 
   return res.status(HTTPSTATUS.INTERNAL_SERVER_ERROR).json({
     message: "Internal Server Error",
-    error: error?.message || "Unknow error occurred",
+    ...(config.IS_PRODUCTION
+      ? {}
+      : { error: error?.message || "Unknown error occurred" }),
   });
 };

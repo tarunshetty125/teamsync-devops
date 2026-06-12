@@ -1,15 +1,27 @@
 import { baseURL } from "@/lib/base-url";
 import { Button } from "../ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { getAuthConfigQueryFn } from "@/lib/api";
 
 const GoogleOauthButton = (props: { label: string }) => {
   const { label } = props;
+  const { data, isLoading } = useQuery({
+    queryKey: ["auth-config"],
+    queryFn: getAuthConfigQueryFn,
+  });
 
   const handleClick = () => {
     window.location.href = `${baseURL}/auth/google`;
   };
+
+  if (!isLoading && !data?.googleOAuthEnabled) {
+    return null;
+  }
+
   return (
     <Button
       onClick={handleClick}
+      disabled={isLoading}
       variant="outline"
       type="button"
       className="w-full"

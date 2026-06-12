@@ -22,10 +22,12 @@
 .vscode/
 Thumbs.db
 backend/dist/
+backend/uploads/
 client/dist/
 coverage/
 grafana-data/
 mongo-data/
+nginx/certs/
 node_modules/
 npm-debug.log*
 prometheus-data/

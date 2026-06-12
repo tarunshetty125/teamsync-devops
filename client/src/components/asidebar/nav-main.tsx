@@ -7,6 +7,10 @@ import {
   CheckCircle,
   LayoutDashboard,
   CalendarDays,
+  CalendarRange,
+  BarChart3,
+  Map,
+  Timer,
 } from "lucide-react";
 import {
   SidebarGroup,
@@ -52,6 +56,26 @@ export function NavMain() {
       title: "Calendar",
       url: `/workspace/${workspaceId}/calendar`,
       icon: CalendarDays,
+    },
+    {
+      title: "Timeline",
+      url: `/workspace/${workspaceId}/timeline`,
+      icon: CalendarRange,
+    },
+    {
+      title: "Roadmap",
+      url: `/workspace/${workspaceId}/roadmap`,
+      icon: Map,
+    },
+    {
+      title: "Gantt",
+      url: `/workspace/${workspaceId}/gantt`,
+      icon: BarChart3,
+    },
+    {
+      title: "Productivity",
+      url: `/workspace/${workspaceId}/productivity`,
+      icon: Timer,
     },
     {
       title: "Members",

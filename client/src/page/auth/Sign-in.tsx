@@ -1,4 +1,5 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -24,13 +25,14 @@ import GoogleOauthButton from "@/components/auth/google-oauth-button";
 import { useMutation } from "@tanstack/react-query";
 import { loginMutationFn } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
-import { Loader } from "lucide-react";
+import { Eye, EyeOff, Loader } from "lucide-react";
 
 
 const SignIn = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get("returnUrl");
+  const [showPassword, setShowPassword] = useState(false);
 
   const { mutate, isPending } = useMutation({
     mutationFn: loginMutationFn,
@@ -68,11 +70,13 @@ const SignIn = () => {
           description: `Successfully logged in`,
         });
 
-        localStorage.setItem('workspace',`http://localhost:5173/workspace/${user.currentWorkspace}`);
         navigate(decodedUrl || `/workspace/${user.currentWorkspace}`);
       },
-      onError: (error: any) => {
-        const errorMessage = error?.message || error?.response?.data?.message || "Please check your credentials and try again";
+      onError: (error: unknown) => {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Please check your credentials and try again";
         toast({
           title: "Login failed",
           description: errorMessage,
@@ -153,11 +157,36 @@ const SignIn = () => {
                                 </a>
                               </div>
                               <FormControl>
-                                <Input
-                                  type="password"
-                                  className="!h-[48px]"
-                                  {...field}
-                                />
+                                <div className="relative">
+                                  <Input
+                                    type={showPassword ? "text" : "password"}
+                                    className="!h-[48px] pr-12"
+                                    {...field}
+                                  />
+                                  <button
+                                    type="button"
+                                    aria-label={
+                                      showPassword
+                                        ? "Hide password"
+                                        : "Show password"
+                                    }
+                                    title={
+                                      showPassword
+                                        ? "Hide password"
+                                        : "Show password"
+                                    }
+                                    onClick={() =>
+                                      setShowPassword((visible) => !visible)
+                                    }
+                                    className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                  >
+                                    {showPassword ? (
+                                      <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </div>
                               </FormControl>
 
                               <FormMessage />

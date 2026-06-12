@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { ProviderEnum, ProviderEnumType } from "../enums/account-provider.enum";
 
-export interface AccountDocument extends Document {
+interface AccountDocument extends Document {
   provider: ProviderEnumType;
   providerId: string; // Store the email, googleId, facebookId as the providerId
   userId: mongoose.Types.ObjectId;
@@ -25,7 +25,6 @@ const accountSchema = new Schema<AccountDocument>(
     providerId: {
       type: String,
       required: true,
-      unique: true,
     },
     refreshToken: { type: String, default: null },
     tokenExpiry: { type: Date, default: null },
@@ -33,12 +32,16 @@ const accountSchema = new Schema<AccountDocument>(
   {
     timestamps: true,
     toJSON: {
-      transform(doc, ret) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret.refreshToken;
+        return ret;
       },
     },
   }
 );
+
+accountSchema.index({ provider: 1, providerId: 1 }, { unique: true });
+accountSchema.index({ userId: 1 });
 
 const AccountModel = mongoose.model<AccountDocument>("Account", accountSchema);
 export default AccountModel;

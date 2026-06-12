@@ -13,25 +13,29 @@ const seedRoles = async () => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    console.log("Clearing existing roles...");
-    await RoleModel.deleteMany({}, { session });
-
     for (const roleName in RolePermissions) {
       const role = roleName as keyof typeof RolePermissions;
       const permissions = RolePermissions[role];
 
       // Check if the role already exists
-      const existingRole = await RoleModel.findOne({ name: role }).session(
-        session
-      );
+      const existingRole = await RoleModel.findOne({
+        name: role,
+        isSystem: true,
+      }).session(session);
       if (!existingRole) {
         const newRole = new RoleModel({
           name: role,
           permissions: permissions,
+          isSystem: true,
+          workspace: null,
         });
         await newRole.save({ session });
         console.log(`Role ${role} added with permissions.`);
       } else {
+        existingRole.permissions = permissions;
+        existingRole.isSystem = true;
+        existingRole.workspace = null;
+        await existingRole.save({ session });
         console.log(`Role ${role} already exists.`);
       }
     }

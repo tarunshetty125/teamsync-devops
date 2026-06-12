@@ -4,7 +4,7 @@
 # ─────────────────────────────────────────────────────────────
 
 # Stage 1: Build TypeScript
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production image
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -39,11 +39,13 @@ EXPOSE 8000
 
 # Health check to verify the container is running
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/v1/auth/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1
 
 # Run as non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodeuser -u 1001
+    adduser -S nodeuser -u 1001 && \
+    mkdir -p /app/uploads && \
+    chown -R nodeuser:nodejs /app/uploads
 USER nodeuser
 
 # Start the application

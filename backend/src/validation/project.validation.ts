@@ -1,10 +1,12 @@
 import { z } from "zod";
+import { objectIdSchema, paginationSchema } from "./common.validation";
 
-export const emojiSchema = z.string().trim().optional();
-export const nameSchema = z.string().trim().min(1).max(255);
-export const descriptionSchema = z.string().trim().optional();
+const emojiSchema = z.string().trim().max(32).optional();
+const nameSchema = z.string().trim().min(1).max(255);
+const descriptionSchema = z.string().trim().optional();
 
-export const projectIdSchema = z.string().trim().min(1);
+export const projectIdSchema = objectIdSchema("Project ID");
+export const projectPaginationSchema = paginationSchema;
 
 export const createProjectSchema = z.object({
   emoji: emojiSchema,

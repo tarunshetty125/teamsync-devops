@@ -1,26 +1,49 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import passport from "passport";
 import { config } from "../config/app.config";
 import {
+  getAuthConfigController,
   googleLoginCallback,
   loginController,
   logOutController,
   registerUserController,
 } from "../controllers/auth.controller";
+import {
+  authRateLimiter,
+  writeApiRateLimiter,
+} from "../middlewares/rateLimit.middleware";
+import isAuthenticated from "../middlewares/isAuthenticated.middleware";
 
 
 const failedUrl = `${config.FRONTEND_GOOGLE_CALLBACK_URL}?status=failure`;
 
 const authRoutes = Router();
 
-authRoutes.post("/register", registerUserController);
-authRoutes.post("/login", loginController);
+const requireGoogleOAuth = (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!config.GOOGLE_OAUTH_ENABLED) {
+    res.status(503).json({
+      message: "Google OAuth is not configured for this environment",
+    });
+    return;
+  }
 
-authRoutes.post("/logout", logOutController);
+  next();
+};
+
+authRoutes.get("/config", getAuthConfigController);
+authRoutes.post("/register", authRateLimiter, registerUserController);
+authRoutes.post("/login", authRateLimiter, loginController);
+
+authRoutes.post("/logout", isAuthenticated, writeApiRateLimiter, logOutController);
 
 
 authRoutes.get(
   "/google",
+  requireGoogleOAuth,
   passport.authenticate("google", {
     scope: ["profile", "email"],
   })
@@ -28,6 +51,7 @@ authRoutes.get(
 
 authRoutes.get(
   "/google/callback",
+  requireGoogleOAuth,
   passport.authenticate("google", {
     failureRedirect: failedUrl,
   }),

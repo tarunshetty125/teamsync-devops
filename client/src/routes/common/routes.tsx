@@ -1,14 +1,21 @@
-import GoogleOAuthFailure from "@/page/auth/GoogleOAuthFailure";
-import SignIn from "@/page/auth/Sign-in";
-import SignUp from "@/page/auth/Sign-up";
-import WorkspaceDashboard from "@/page/workspace/Dashboard";
-import Members from "@/page/workspace/Members";
-import ProjectDetails from "@/page/workspace/ProjectDetails";
-import Settings from "@/page/workspace/Settings";
-import Tasks from "@/page/workspace/Tasks";
-import Calendar from "@/page/workspace/Calendar";
 import { AUTH_ROUTES, BASE_ROUTE, PROTECTED_ROUTES } from "./routePaths";
-import InviteUser from "@/page/invite/InviteUser";
+import {
+  Calendar,
+  Gantt,
+  GoogleOAuthFailure,
+  InviteUser,
+  Members,
+  Productivity,
+  Profile,
+  ProjectDetails,
+  Roadmap,
+  Settings,
+  SignIn,
+  SignUp,
+  Tasks,
+  Timeline,
+  WorkspaceDashboard,
+} from "./lazy-pages";
 
 export const authenticationRoutePaths = [
   { path: AUTH_ROUTES.SIGN_IN, element: <SignIn /> },
@@ -20,8 +27,13 @@ export const protectedRoutePaths = [
   { path: PROTECTED_ROUTES.WORKSPACE, element: <WorkspaceDashboard /> },
   { path: PROTECTED_ROUTES.TASKS, element: <Tasks /> },
   { path: PROTECTED_ROUTES.CALENDAR, element: <Calendar /> },
+  { path: PROTECTED_ROUTES.TIMELINE, element: <Timeline /> },
+  { path: PROTECTED_ROUTES.ROADMAP, element: <Roadmap /> },
+  { path: PROTECTED_ROUTES.GANTT, element: <Gantt /> },
+  { path: PROTECTED_ROUTES.PRODUCTIVITY, element: <Productivity /> },
   { path: PROTECTED_ROUTES.MEMBERS, element: <Members /> },
   { path: PROTECTED_ROUTES.SETTINGS, element: <Settings /> },
+  { path: PROTECTED_ROUTES.PROFILE, element: <Profile /> },
   { path: PROTECTED_ROUTES.PROJECT_DETAILS, element: <ProjectDetails /> },
 ];
 

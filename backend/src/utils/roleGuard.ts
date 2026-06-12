@@ -1,16 +1,16 @@
-import { PermissionType, Permissions } from "../enums/role.enum";
+import { PermissionType } from "../enums/role.enum";
 import { UnauthorizedException } from "./appError";
 import { RolePermissions } from "./role-permission";
 
 export const roleGuard = (
-  role: keyof typeof RolePermissions,
+  role: string,
   requiredPermissions: PermissionType[]
 ) => {
-  const permissions = RolePermissions[role];
+  const permissions = (RolePermissions as Record<string, PermissionType[]>)[role];
   // If the role doesn't exist or lacks required permissions, throw an exception
 
   const hasPermission = requiredPermissions.every((permission) =>
-    permissions.includes(permission)
+    permissions?.includes(permission)
   );
 
   if (!hasPermission) {

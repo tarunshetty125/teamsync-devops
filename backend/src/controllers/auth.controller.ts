@@ -1,28 +1,41 @@
 import { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import { config } from "../config/app.config";
-import { registerSchema } from "../validation/auth.validation";
+import { loginSchema, registerSchema } from "../validation/auth.validation";
 import { HTTPSTATUS } from "../config/http.config";
 import { registerUserService } from "../services/auth.service";
 import passport from "passport";
-import { filewrite } from "../file";
+import { InternalServerException } from "../utils/appError";
+import {
+  createSessionRecord,
+  revokeCurrentSessionRecord,
+} from "../services/session-registry.service";
+import { ProviderEnum } from "../enums/account-provider.enum";
 
 export const googleLoginCallback = asyncHandler(
   async (req: Request, res: Response) => {
     const currentWorkspace = req.user?.currentWorkspace;
+    const userId = req.user?._id?.toString();
 
-    if (!currentWorkspace) {
+    if (!currentWorkspace || !userId) {
       return res.redirect(
         `${config.FRONTEND_GOOGLE_CALLBACK_URL}?status=failure`
       );
     }
-//file
-    filewrite(`http://localhost:5173/workspace/${currentWorkspace}`);
 
+    await createSessionRecord(req, userId, ProviderEnum.GOOGLE);
 
     return res.redirect(
-      `${config.FRONTEND_ORIGIN}/workspace/${currentWorkspace}`
+      `${config.FRONTEND_ORIGINS[0]}/workspace/${currentWorkspace}`
     );
+  }
+);
+
+export const getAuthConfigController = asyncHandler(
+  async (_req: Request, res: Response) => {
+    res.status(HTTPSTATUS.OK).json({
+      googleOAuthEnabled: config.GOOGLE_OAUTH_ENABLED,
+    });
   }
 );
 
@@ -42,6 +55,8 @@ export const registerUserController = asyncHandler(
 
 export const loginController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    req.body = loginSchema.parse(req.body);
+
     passport.authenticate(
       "local",
       (
@@ -64,10 +79,14 @@ export const loginController = asyncHandler(
             return next(err);
           }
 
-          return res.status(HTTPSTATUS.OK).json({
-            message: "Logged in successfully",
-            user,
-          });
+          createSessionRecord(req, user._id.toString(), ProviderEnum.EMAIL)
+            .then(() =>
+              res.status(HTTPSTATUS.OK).json({
+                message: "Logged in successfully",
+                user,
+              })
+            )
+            .catch(next);
         });
       }
     )(req, res, next);
@@ -76,16 +95,25 @@ export const loginController = asyncHandler(
 
 export const logOutController = asyncHandler(
   async (req: Request, res: Response) => {
-    req.logout((err) => {
-      if (err) {
-        console.error("Logout error:", err);
-        return res
-          .status(HTTPSTATUS.INTERNAL_SERVER_ERROR)
-          .json({ error: "Failed to log out" });
-      }
+    const userId = req.user?._id?.toString();
+    if (userId) {
+      await revokeCurrentSessionRecord(req, userId);
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      req.logout((err) => {
+        if (err) {
+          reject(new InternalServerException("Failed to log out"));
+          return;
+        }
+
+        resolve();
+      });
     });
 
     req.session = null;
+    res.clearCookie(config.CSRF_COOKIE_NAME, { path: "/" });
+
     return res
       .status(HTTPSTATUS.OK)
       .json({ message: "Logged out successfully" });
