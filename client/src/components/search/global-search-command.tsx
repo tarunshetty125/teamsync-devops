@@ -84,15 +84,15 @@ function SearchResultRow({
     <CommandItem
       value={`${result.type} ${result.title} ${result.subtitle} ${result.snippet}`}
       onSelect={() => onSelect(result)}
-      className="cursor-pointer items-start gap-3 py-3"
+      className="cursor-pointer items-start gap-3 rounded-lg px-3 py-3"
     >
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-muted">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-muted/60 shadow-sm">
         <Icon className="h-4 w-4 text-muted-foreground" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
           <span className="truncate text-sm font-medium">{result.title}</span>
-          <Badge variant="secondary" className="shrink-0 text-[10px]">
+          <Badge variant="secondary" className="shrink-0 uppercase tracking-wide">
             {result.type.toLowerCase()}
           </Badge>
         </span>
@@ -208,7 +208,7 @@ export default function GlobalSearchCommand({
 
   return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="top-[12vh] max-h-[78vh] translate-y-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogContent className="top-[10vh] max-h-[80vh] translate-y-0 overflow-hidden border-border/70 p-0 shadow-[0_28px_90px_rgba(15,23,42,0.28)] sm:max-w-2xl">
           <DialogHeader className="sr-only">
             <DialogTitle>Global workspace search</DialogTitle>
           </DialogHeader>
@@ -232,7 +232,7 @@ export default function GlobalSearchCommand({
                 <>
                   <CommandGroup heading="Recent searches">
                     {recentSearches.length === 0 ? (
-                      <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      <div className="rounded-lg border border-dashed bg-muted/20 px-2 py-8 text-center text-sm text-muted-foreground">
                         No recent searches
                       </div>
                     ) : (
@@ -280,7 +280,7 @@ export default function GlobalSearchCommand({
                               setSelectedType(group.type);
                               setPageNumber(1);
                             }}
-                            className="cursor-pointer justify-center text-sm text-muted-foreground"
+                            className="cursor-pointer justify-center rounded-lg text-sm text-muted-foreground"
                           >
                             Show more {typeLabel[group.type].toLowerCase()}
                           </CommandItem>
@@ -299,13 +299,13 @@ export default function GlobalSearchCommand({
                   <CommandItem
                     value="back to grouped results"
                     onSelect={() => setSelectedType(null)}
-                    className="cursor-pointer text-muted-foreground"
+                    className="cursor-pointer rounded-lg text-muted-foreground"
                   >
                     Back to grouped results
                   </CommandItem>
                   <CommandSeparator />
                   {typeResults.length === 0 ? (
-                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                    <div className="rounded-lg border border-dashed bg-muted/20 px-2 py-8 text-center text-sm text-muted-foreground">
                       No results found.
                     </div>
                   ) : (

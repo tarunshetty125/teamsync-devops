@@ -73,6 +73,21 @@ const formatEnumLabel = (value: string) =>
     .toLowerCase()
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
+const statusAccentClass = (status: TaskStatusEnumType) => {
+  switch (status) {
+    case TaskStatusEnum.DONE:
+      return "border-emerald-200 bg-emerald-50/60";
+    case TaskStatusEnum.IN_REVIEW:
+      return "border-violet-200 bg-violet-50/60";
+    case TaskStatusEnum.IN_PROGRESS:
+      return "border-amber-200 bg-amber-50/60";
+    case TaskStatusEnum.TODO:
+      return "border-blue-200 bg-blue-50/60";
+    default:
+      return "border-slate-200 bg-slate-50/70";
+  }
+};
+
 const queryKeyForBoard = (
   workspaceId: string,
   projectId: string | undefined,
@@ -176,10 +191,10 @@ function KanbanCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-md border bg-background p-3 shadow-sm transition",
+        "rounded-lg border border-border/70 bg-background p-3 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-md",
         canMove && "cursor-grab active:cursor-grabbing",
         isDragging && "opacity-40",
-        isDraggingOverlay && "w-[280px] rotate-1 shadow-lg"
+        isDraggingOverlay && "w-[280px] rotate-1 border-primary/30 shadow-xl"
       )}
       {...attributes}
       {...listeners}
@@ -193,11 +208,11 @@ function KanbanCard({
           <Badge variant="outline" className="h-6 shrink-0">
             {task.taskCode}
           </Badge>
-          <Badge variant="secondary" className="shrink-0 text-[11px]">
+          <Badge variant="secondary" className="shrink-0 uppercase tracking-wide">
             {formatEnumLabel(task.priority)}
           </Badge>
         </div>
-        <div className="mt-2 line-clamp-2 text-sm font-medium">
+        <div className="mt-2 line-clamp-2 text-sm font-semibold leading-5">
           {task.title}
         </div>
         {task.description && (
@@ -232,7 +247,7 @@ function KanbanCard({
           {task.labels.slice(0, 3).map((label) => (
             <span
               key={label._id}
-              className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px]"
+              className="inline-flex items-center gap-1 rounded-md border bg-muted/35 px-1.5 py-0.5 text-[11px]"
             >
               <span
                 className="h-2 w-2 rounded-full"
@@ -259,7 +274,7 @@ function KanbanCard({
             <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
           </Avatar>
         ) : (
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border text-muted-foreground">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border bg-muted/30 text-muted-foreground">
             <UserRound className="h-3.5 w-3.5" />
           </span>
         )}
@@ -313,11 +328,12 @@ function KanbanColumn({
     <section
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[520px] min-w-[260px] flex-col rounded-md border bg-muted/30",
-        isOver && "border-primary bg-primary/5"
+        "flex min-h-[520px] min-w-[260px] flex-col rounded-lg border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
+        statusAccentClass(column.status),
+        isOver && "border-primary bg-primary/5 shadow-md"
       )}
     >
-      <div className="flex h-12 items-center justify-between border-b px-3">
+      <div className="flex h-12 items-center justify-between border-b border-border/70 px-3">
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold">
             {formatEnumLabel(column.status)}
@@ -327,7 +343,7 @@ function KanbanColumn({
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto p-3">
         {column.tasks.length === 0 ? (
-          <div className="rounded-md border border-dashed bg-background p-4 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed bg-background/70 p-4 text-center text-sm text-muted-foreground">
             No tasks
           </div>
         ) : (
@@ -344,7 +360,7 @@ function KanbanColumn({
         )}
       </div>
       {column.hasMore && (
-        <div className="border-t p-3">
+        <div className="border-t border-border/70 p-3">
           <Button
             variant="outline"
             size="sm"
@@ -681,19 +697,19 @@ export default function KanbanBoard({ projectId }: { projectId?: string }) {
           onDragEnd={handleDragEnd}
           onDragCancel={() => setActiveTask(null)}
         >
-          <div className="grid min-w-[1280px] grid-cols-5 gap-3">
+          <div className="grid min-w-[1280px] grid-cols-5 gap-4">
             {isLoading
               ? Object.values(TaskStatusEnum).map((status) => (
                   <section
                     key={status}
-                    className="min-h-[520px] rounded-md border bg-muted/30 p-3"
+                    className="min-h-[520px] rounded-lg border bg-card p-3 shadow-sm"
                   >
-                    <div className="h-5 w-28 rounded bg-muted" />
+                    <div className="h-5 w-28 rounded-md bg-muted" />
                     <div className="mt-4 space-y-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
                           key={index}
-                          className="h-28 rounded-md border bg-background"
+                          className="h-28 rounded-lg border bg-background"
                         />
                       ))}
                     </div>
@@ -730,14 +746,17 @@ export default function KanbanBoard({ projectId }: { projectId?: string }) {
       <div className="space-y-4 md:hidden">
         {isLoading
           ? Object.values(TaskStatusEnum).map((status) => (
-              <section key={status} className="rounded-md border p-3">
+              <section key={status} className="rounded-lg border bg-card p-3">
                 <div className="h-5 w-28 rounded bg-muted" />
-                <div className="mt-3 h-24 rounded-md border bg-background" />
+                <div className="mt-3 h-24 rounded-lg border bg-background" />
               </section>
             ))
           : columns.map((column) => (
-              <section key={column.status} className="rounded-md border">
-                <div className="flex h-12 items-center justify-between border-b px-3">
+              <section
+                key={column.status}
+                className={cn("rounded-lg border bg-card", statusAccentClass(column.status))}
+              >
+                <div className="flex h-12 items-center justify-between border-b border-border/70 px-3">
                   <h3 className="text-sm font-semibold">
                     {formatEnumLabel(column.status)}
                   </h3>
@@ -745,7 +764,7 @@ export default function KanbanBoard({ projectId }: { projectId?: string }) {
                 </div>
                 <div className="space-y-3 p-3">
                   {column.tasks.length === 0 ? (
-                    <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+                    <div className="rounded-lg border border-dashed bg-background/70 p-4 text-center text-sm text-muted-foreground">
                       No tasks
                     </div>
                   ) : (

@@ -111,7 +111,7 @@ const MetricCard = ({
   value: string | number;
   detail?: string;
 }) => (
-  <Card className="shadow-none">
+  <Card>
     <CardHeader className="pb-2">
       <CardTitle className="text-sm font-medium text-muted-foreground">
         {title}
@@ -125,7 +125,7 @@ const MetricCard = ({
 );
 
 const EmptyState = ({ label }: { label: string }) => (
-  <div className="rounded-md border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
+  <div className="rounded-lg border border-dashed bg-muted/20 p-4 text-center text-sm text-muted-foreground">
     {label}
   </div>
 );
@@ -329,11 +329,11 @@ export default function ProductivityPage() {
   );
 
   return (
-    <main className="space-y-6 p-4 md:p-6">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <main className="premium-page">
+      <div className="premium-page-header">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Productivity</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="premium-heading">Productivity</h2>
+          <p className="premium-muted">
             Track time, review timesheets, and compare team capacity.
           </p>
         </div>
@@ -354,7 +354,7 @@ export default function ProductivityPage() {
         </Select>
       </div>
 
-      <Tabs defaultValue="my-time">
+      <Tabs defaultValue="my-time" className="space-y-4">
         <TabsList className="flex h-auto flex-wrap justify-start">
           <TabsTrigger value="my-time">My Time</TabsTrigger>
           <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
@@ -368,7 +368,7 @@ export default function ProductivityPage() {
 
         <TabsContent value="my-time" className="space-y-4 pt-4">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <Card className="shadow-none">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Timer className="h-4 w-4" />
@@ -377,7 +377,7 @@ export default function ProductivityPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {activeTimer ? (
-                  <div className="rounded-md border bg-emerald-50 p-4">
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
                     <p className="text-sm font-medium text-emerald-800">
                       ▶ Running: {getEntryLabel(activeTimer)}
                     </p>
@@ -454,7 +454,7 @@ export default function ProductivityPage() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-none">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Plus className="h-4 w-4" />
@@ -561,7 +561,7 @@ export default function ProductivityPage() {
             />
           </div>
 
-          <Card className="shadow-none">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Recent Entries</CardTitle>
             </CardHeader>
@@ -572,7 +572,7 @@ export default function ProductivityPage() {
                 entriesQuery.data.timeEntries.map((entry) => (
                   <div
                     key={entry._id}
-                    className="flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
+                    className="premium-row-hover flex flex-col gap-2 rounded-lg border p-3 md:flex-row md:items-center md:justify-between"
                   >
                     <div>
                       <p className="text-sm font-medium">{getEntryLabel(entry)}</p>
@@ -629,7 +629,7 @@ export default function ProductivityPage() {
               </Select>
             </div>
           )}
-          <Card className="shadow-none">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Timesheet</CardTitle>
             </CardHeader>
@@ -642,7 +642,7 @@ export default function ProductivityPage() {
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : timesheetQuery.data?.timesheet.days.length ? (
                 timesheetQuery.data.timesheet.days.map((day) => (
-                  <div key={day.date} className="rounded-md border p-3">
+                  <div key={day.date} className="rounded-lg border p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <p className="font-medium">{day.date}</p>
                       <Badge variant="outline">{formatHours(day.totalSeconds)}</Badge>
@@ -670,7 +670,7 @@ export default function ProductivityPage() {
         </TabsContent>
 
         <TabsContent value="workload" className="space-y-4 pt-4">
-          <Card className="shadow-none">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <BarChart3 className="h-4 w-4" />
@@ -681,7 +681,7 @@ export default function ProductivityPage() {
               {workloadQuery.data?.workload.members.map((member) => (
                 <div
                   key={member.memberId}
-                  className="flex items-center justify-between rounded-md border p-3"
+                  className="premium-row-hover flex items-center justify-between rounded-lg border p-3"
                 >
                   <div>
                     <p className="text-sm font-medium">{member.name}</p>
@@ -699,13 +699,13 @@ export default function ProductivityPage() {
         </TabsContent>
 
         <TabsContent value="capacity" className="space-y-4 pt-4">
-          <Card className="shadow-none">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Capacity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {capacityQuery.data?.capacity.members.map((member) => (
-                <div key={member.memberId} className="rounded-md border p-3">
+                <div key={member.memberId} className="rounded-lg border p-3">
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-sm font-medium">{member.name}</p>

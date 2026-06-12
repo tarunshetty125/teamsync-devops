@@ -77,21 +77,21 @@ const Asidebar = () => {
 
   return (
     <>
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" className="border-r border-sidebar-border/80 bg-sidebar">
         <SidebarHeader className="!py-0 dark:bg-background">
-          <div className="flex h-[50px] items-center justify-start w-full px-1">
+          <div className="flex h-14 w-full items-center justify-start px-1">
             <Logo url={`/workspace/${workspaceId}`} />
             {open && (
               <Link
                 to={`/workspace/${workspaceId}`}
-                className="hidden md:flex ml-2 items-center gap-2 self-center font-medium"
+                className="ml-2 hidden items-center gap-2 self-center text-sm font-semibold tracking-tight md:flex"
               >
                 Team Sync.
               </Link>
             )}
           </div>
         </SidebarHeader>
-        <SidebarContent className=" !mt-0 dark:bg-background">
+        <SidebarContent className="!mt-0 px-1 dark:bg-background">
           <SidebarGroup className="!py-0">
             <SidebarGroupContent>
               <WorkspaceSwitcher />
@@ -102,7 +102,7 @@ const Asidebar = () => {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter className="dark:bg-background">
+        <SidebarFooter className="border-t border-sidebar-border/70 dark:bg-background">
           <SidebarMenu>
             <SidebarMenuItem>
               {isLoading ? (
@@ -115,7 +115,7 @@ const Asidebar = () => {
                   <DropdownMenuTrigger asChild>
                     <SidebarMenuButton
                       size="lg"
-                      className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                      className="rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                     >
                       <Avatar className="h-8 w-8 rounded-full">
                         <AvatarImage src={getApiAssetUrl(user?.profilePicture)} />

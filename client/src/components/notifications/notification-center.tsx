@@ -57,6 +57,14 @@ const iconByCategory = {
   SYSTEM: Bell,
 };
 
+const categoryClass = {
+  TASK: "border-blue-200 bg-blue-50 text-blue-700",
+  PROJECT: "border-violet-200 bg-violet-50 text-violet-700",
+  COMMENT: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  INVITE: "border-amber-200 bg-amber-50 text-amber-700",
+  SYSTEM: "border-slate-200 bg-slate-50 text-slate-700",
+};
+
 const getNotificationPath = (
   workspaceId: string,
   notification: NotificationItemType
@@ -90,9 +98,11 @@ function NotificationRow({
     <button
       type="button"
       onClick={() => onOpen(notification)}
-      className="group flex w-full items-start gap-3 border-b py-3 text-left last:border-0 hover:bg-muted/50"
+      className="group flex w-full items-start gap-3 rounded-lg border border-transparent px-3 py-3 text-left transition-colors hover:border-border hover:bg-muted/45"
     >
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background">
+      <span
+        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${categoryClass[notification.category]}`}
+      >
         <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
@@ -100,7 +110,7 @@ function NotificationRow({
           <span className="truncate text-sm font-medium">
             {notification.title}
           </span>
-          {unread && <span className="h-2 w-2 rounded-full bg-primary" />}
+          {unread && <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]" />}
         </span>
         <span className="mt-1 line-clamp-2 text-xs text-muted-foreground">
           {notification.body}
@@ -307,8 +317,8 @@ export default function NotificationCenter() {
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
-          <div className="border-b px-5 py-4">
+        <SheetContent className="flex w-full flex-col border-l border-border/70 bg-background p-0 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:max-w-md">
+          <div className="border-b bg-card/70 px-5 py-4">
             <div className="flex items-center justify-between gap-3 pr-8">
               <div>
                 <h2 className="text-base font-semibold">Notifications</h2>
@@ -342,17 +352,17 @@ export default function NotificationCenter() {
 
             <TabsContent value="inbox" className="min-h-0 flex-1 px-5">
               {notificationsQuery.isLoading ? (
-                <div className="flex h-28 items-center justify-center text-sm text-muted-foreground">
+                <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
                   <Loader className="mr-2 animate-spin" />
                   Loading notifications...
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="flex h-28 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-muted/20 text-center text-sm text-muted-foreground">
                   <FileText className="h-5 w-5" />
                   No notifications yet.
                 </div>
               ) : (
-                <div className="max-h-[calc(100svh-220px)] overflow-y-auto">
+                <div className="max-h-[calc(100svh-220px)] space-y-2 overflow-y-auto pb-5">
                   {notifications.map((notification) => (
                     <NotificationRow
                       key={notification._id}

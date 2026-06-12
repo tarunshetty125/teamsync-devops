@@ -66,13 +66,13 @@ const Header = () => {
 
   const pageHeading = getPageLabel(pathname);
   return (
-    <header className="flex sticky top-0 z-50 bg-white h-12 shrink-0 items-center border-b">
-      <div className="flex flex-1 items-center gap-2 px-3">
-        <SidebarTrigger />
-        <Separator orientation="vertical" className="mr-2 h-4" />
+    <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center border-b bg-background/90 backdrop-blur-xl">
+      <div className="flex flex-1 items-center gap-2 px-4">
+        <SidebarTrigger className="rounded-md" />
+        <Separator orientation="vertical" className="mx-2 h-5" />
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem className="hidden md:block text-[15px]">
+            <BreadcrumbItem className="hidden text-sm md:block">
               {pageHeading ? (
                 <BreadcrumbLink asChild>
                   <Link to={`/workspace/${workspaceId}`}>Dashboard</Link>
@@ -87,7 +87,7 @@ const Header = () => {
             {pageHeading && (
               <>
                 <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem className="text-[15px]">
+                <BreadcrumbItem className="text-sm">
                   <BreadcrumbPage className="line-clamp-1">
                     {pageHeading}
                   </BreadcrumbPage>
@@ -97,13 +97,13 @@ const Header = () => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="flex items-center gap-2 px-3">
+      <div className="flex items-center gap-2 px-4">
         <ActiveTimerChip />
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-2 text-muted-foreground"
+          className="h-8 gap-2 border-border/80 bg-card text-muted-foreground shadow-sm"
           onClick={openSearch}
         >
           <Search className="h-4 w-4" />

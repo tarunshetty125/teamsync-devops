@@ -244,11 +244,11 @@ export default function GanttPage() {
   };
 
   return (
-    <div className="w-full space-y-6 py-4 md:pt-3">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="premium-page">
+      <div className="premium-page-header">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Gantt</h2>
-          <p className="text-muted-foreground">
+          <h2 className="premium-heading">Gantt</h2>
+          <p className="premium-muted">
             Editable task schedules with dependency warnings.
           </p>
         </div>
@@ -258,7 +258,7 @@ export default function GanttPage() {
         </Button>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-5">
+      <div className="grid gap-3 rounded-lg border border-border/70 bg-card p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:grid-cols-5">
         <Select value={range} onValueChange={(value) => setFilter("range", value)}>
           <SelectTrigger>
             <SelectValue />
@@ -332,7 +332,7 @@ export default function GanttPage() {
       </div>
 
       {ganttQuery.isLoading ? (
-        <div className="h-[440px] rounded-lg border bg-muted/30" />
+        <div className="h-[440px] rounded-lg border bg-muted/30 animate-pulse" />
       ) : null}
       {ganttQuery.isError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">

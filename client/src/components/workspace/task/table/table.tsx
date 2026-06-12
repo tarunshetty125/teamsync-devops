@@ -87,9 +87,9 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="w-full space-y-2">
-      <div className="block w-full lg:flex lg:items-center lg:justify-between">
-        {filtersToolbar && <div className="flex-1"> {filtersToolbar}</div>}
+    <div className="w-full space-y-3">
+      <div className="flex w-full flex-col gap-3 rounded-lg border border-border/70 bg-card p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] lg:flex-row lg:items-center lg:justify-between">
+        {filtersToolbar && <div className="flex-1">{filtersToolbar}</div>}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto w-full lg:w-auto">
@@ -117,7 +117,7 @@ export function DataTable<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="rounded-md border">
+      <div className="overflow-hidden rounded-lg border border-border/70 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         {isLoading ? (
           <TableSkeleton columns={6} rows={10} />
         ) : (
@@ -161,7 +161,7 @@ export function DataTable<TData, TValue>({
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center"
+                    className="h-32 text-center text-sm text-muted-foreground"
                   >
                     No results.
                   </TableCell>

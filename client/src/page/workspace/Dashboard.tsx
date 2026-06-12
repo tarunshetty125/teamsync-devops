@@ -127,7 +127,7 @@ const ChartCard = ({
   title: string;
   children: ReactNode;
 }) => (
-  <Card className="shadow-none">
+  <Card className="overflow-hidden">
     <CardHeader className="pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
     </CardHeader>
@@ -417,7 +417,7 @@ const MetricCard = ({
   icon: ComponentType<{ className?: string }>;
   detail?: string;
 }) => (
-  <Card className="shadow-none">
+  <Card>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium text-muted-foreground">
         {title}
@@ -425,7 +425,7 @@ const MetricCard = ({
       <Icon className="h-4 w-4 text-muted-foreground" />
     </CardHeader>
     <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-2xl font-semibold tracking-tight">{value}</div>
       {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
     </CardContent>
   </Card>
@@ -443,7 +443,7 @@ const ProgressRow = ({
   href?: string;
 }) => {
   const content = (
-    <div className="space-y-2 rounded-md border p-3 hover:bg-muted/30">
+    <div className="premium-row-hover space-y-2 rounded-lg border p-3">
       <div className="flex items-center justify-between gap-3">
         <p className="truncate text-sm font-medium">{label}</p>
         <span className="text-sm font-semibold">{Math.round(value)}%</span>
@@ -470,7 +470,7 @@ const TaskList = ({
   tasks: DashboardTaskItemType[];
   workspaceId: string;
 }) => (
-  <Card className="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle className="text-base">{title}</CardTitle>
     </CardHeader>
@@ -488,7 +488,7 @@ const TaskList = ({
               <Link
                 key={task._id}
                 to={href}
-                className="flex items-start justify-between gap-3 rounded-md border p-3 hover:bg-muted/30"
+                className="premium-row-hover flex items-start justify-between gap-3 rounded-lg border p-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{task.title}</p>
@@ -656,7 +656,7 @@ const TeamDashboard = ({
         <MetricCard title="Total Tasks" value={data.summary.totalTasks} icon={BarChart3} />
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="shadow-none">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Workload</CardTitle>
           </CardHeader>
@@ -681,7 +681,7 @@ const TeamDashboard = ({
             )}
           </CardContent>
         </Card>
-        <Card className="shadow-none">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Status Distribution</CardTitle>
           </CardHeader>
@@ -701,7 +701,7 @@ const TeamDashboard = ({
           </CardContent>
         </Card>
       </div>
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Project Progress</CardTitle>
         </CardHeader>
@@ -802,7 +802,7 @@ const ExecutiveDashboard = ({
         />
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="shadow-none">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Project Health</CardTitle>
           </CardHeader>
@@ -814,7 +814,7 @@ const ExecutiveDashboard = ({
                 <Link
                   key={project.projectId}
                   to={`/workspace/${workspaceId}/project/${project.projectId}`}
-                  className="block rounded-md border p-3 hover:bg-muted/30"
+                  className="premium-row-hover block rounded-lg border p-3"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="truncate text-sm font-medium">
@@ -846,7 +846,7 @@ const ExecutiveDashboard = ({
             )}
           </CardContent>
         </Card>
-        <Card className="shadow-none">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Completion Trend</CardTitle>
           </CardHeader>
@@ -859,7 +859,7 @@ const ExecutiveDashboard = ({
                 .map((bucket) => (
                   <div
                     key={bucket.date}
-                    className="flex items-center justify-between rounded-md border p-3"
+                    className="premium-row-hover flex items-center justify-between rounded-lg border p-3"
                   >
                     <span className="text-sm text-muted-foreground">
                       {formatDate(bucket.date)}
@@ -890,7 +890,7 @@ const ExecutiveDashboard = ({
           icon={ShieldCheck}
         />
       </div>
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Workspace Health</CardTitle>
         </CardHeader>
@@ -969,11 +969,11 @@ const WorkspaceDashboard = () => {
   });
 
   return (
-    <main className="flex flex-1 flex-col py-4 md:pt-3">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <main className="premium-page flex flex-1 flex-col">
+      <div className="premium-page-header">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
+          <h2 className="premium-heading">Dashboard</h2>
+          <p className="premium-muted">
             Workspace work, progress, and health at a glance.
           </p>
         </div>

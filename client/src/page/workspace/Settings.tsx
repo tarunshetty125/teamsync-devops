@@ -75,7 +75,7 @@ const jsonSummary = (value?: Record<string, unknown>) =>
   value ? JSON.stringify(value).slice(0, 140) : "";
 
 const SectionLoader = () => (
-  <div className="flex min-h-32 items-center justify-center rounded-md border">
+  <div className="flex min-h-32 items-center justify-center rounded-lg border bg-card">
     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
   </div>
 );
@@ -89,14 +89,14 @@ const AuditPanel = ({ workspaceId }: { workspaceId: string }) => {
   if (isLoading) return <SectionLoader />;
 
   return (
-    <Card className="shadow-none">
+    <Card>
       <CardHeader>
         <CardTitle className="text-base">Audit logs</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {data?.auditLogs.length ? (
           data.auditLogs.map((log) => (
-            <div key={log._id} className="rounded-md border p-3">
+            <div key={log._id} className="premium-row-hover rounded-lg border p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">{log.action}</Badge>
                 <span className="text-sm font-medium">{log.entityType}</span>
@@ -179,7 +179,7 @@ const RolesPanel = ({ workspaceId }: { workspaceId: string }) => {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_1.2fr]">
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">
             {editingRole ? "Edit custom role" : "Create custom role"}
@@ -192,7 +192,7 @@ const RolesPanel = ({ workspaceId }: { workspaceId: string }) => {
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Description"
           />
-          <div className="grid max-h-72 gap-2 overflow-auto rounded-md border p-3 md:grid-cols-2">
+          <div className="grid max-h-72 gap-2 overflow-auto rounded-lg border bg-muted/20 p-3 md:grid-cols-2">
             {allPermissions.map((permission) => (
               <label key={permission} className="flex items-center gap-2 text-xs">
                 <Checkbox
@@ -225,14 +225,14 @@ const RolesPanel = ({ workspaceId }: { workspaceId: string }) => {
           </div>
         </CardContent>
       </Card>
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Roles</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {rolesQuery.isLoading ? <SectionLoader /> : null}
           {rolesQuery.data?.roles.map((role) => (
-            <div key={role._id} className="flex items-start justify-between gap-3 rounded-md border p-3">
+            <div key={role._id} className="premium-row-hover flex items-start justify-between gap-3 rounded-lg border p-3">
               <button
                 className="min-w-0 text-left"
                 onClick={() => startEdit(role)}
@@ -299,7 +299,7 @@ const PolicyPanel = ({ workspaceId }: { workspaceId: string }) => {
   };
 
   return (
-    <Card className="shadow-none">
+    <Card>
       <CardHeader>
         <CardTitle className="text-base">Workspace policies</CardTitle>
       </CardHeader>
@@ -445,7 +445,7 @@ const ExportsPanel = ({ workspaceId }: { workspaceId: string }) => {
 
   return (
     <div className="space-y-4">
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Generate export</CardTitle>
         </CardHeader>
@@ -482,13 +482,13 @@ const ExportsPanel = ({ workspaceId }: { workspaceId: string }) => {
           </Button>
         </CardContent>
       </Card>
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Recent exports</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {exportsQuery.data?.exportJobs.map((job) => (
-            <div key={job._id} className="flex items-center justify-between gap-3 rounded-md border p-3">
+            <div key={job._id} className="premium-row-hover flex items-center justify-between gap-3 rounded-lg border p-3">
               <div>
                 <p className="text-sm font-medium">
                   {job.format} · {job.datasets.join(", ")}
@@ -541,13 +541,13 @@ const SecurityPanel = ({ workspaceId }: { workspaceId: string }) => {
 
   return (
     <div className="grid gap-4 xl:grid-cols-2">
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Active sessions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {sessionsQuery.data?.sessions.map((session) => (
-            <div key={session.sessionId} className="rounded-md border p-3">
+            <div key={session.sessionId} className="premium-row-hover rounded-lg border p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium">{session.ipAddress}</p>
@@ -575,13 +575,13 @@ const SecurityPanel = ({ workspaceId }: { workspaceId: string }) => {
           ))}
         </CardContent>
       </Card>
-      <Card className="shadow-none">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Recent logins</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {loginsQuery.data?.logins.map((login) => (
-            <div key={login._id} className="rounded-md border p-3">
+            <div key={login._id} className="premium-row-hover rounded-lg border p-3">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm font-medium">{login.provider}</p>
@@ -614,12 +614,12 @@ const Settings = () => {
   }, [canAudit]);
 
   return (
-    <div className="w-full h-auto py-2">
+    <div className="premium-page">
       <WorkspaceHeader />
       <Separator className="my-4" />
       <main>
-        <div className="w-full max-w-6xl mx-auto py-3">
-          <h2 className="text-[20px] leading-[30px] font-semibold mb-3">
+        <div className="mx-auto w-full max-w-6xl rounded-lg border border-border/70 bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <h2 className="mb-3 text-xl font-semibold leading-[30px] tracking-tight">
             Workspace settings
           </h2>
           <Tabs defaultValue={defaultTab} className="space-y-4">

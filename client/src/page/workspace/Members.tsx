@@ -5,13 +5,13 @@ import WorkspaceHeader from "@/components/workspace/common/workspace-header";
 
 export default function Members() {
   return (
-    <div className="w-full h-auto pt-2">
+    <div className="premium-page">
       <WorkspaceHeader />
       <Separator className="my-4 " />
       <main>
-        <div className="w-full max-w-3xl mx-auto pt-3">
+        <div className="mx-auto w-full max-w-4xl rounded-lg border border-border/70 bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <div>
-            <h2 className="text-lg leading-[30px] font-semibold mb-1">
+            <h2 className="mb-1 text-lg font-semibold leading-[30px]">
               Workspace members
             </h2>
             <p className="text-sm text-muted-foreground">
