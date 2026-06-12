@@ -122,14 +122,33 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
           script: |
-            # Navigate to project directory
-            cd /home/ubuntu/TeamSync
+            set -euo pipefail
+            trap 'echo "❌ Deployment failed on line ${LINENO}" >&2' ERR
 
-            # Pull latest code
-            git pull origin main
+            APP_DIR="/home/ubuntu/teamsync-devops"
+            TLS_CERT_PATH="/etc/letsencrypt/live/teamsyncin.duckdns.org/fullchain.pem"
+            TLS_KEY_PATH="/etc/letsencrypt/live/teamsyncin.duckdns.org/privkey.pem"
 
-            # Create .env file from secrets
-            cat > .env << EOF
+            echo "─── Deployment Preflight ───"
+            test "$(whoami)" = "ubuntu"
+            test -d "${APP_DIR}"
+            cd "${APP_DIR}"
+            test -f docker-compose.yml
+            git config --global --add safe.directory "${APP_DIR}" || true
+            docker --version
+            docker compose version
+            id -nG ubuntu | tr ' ' '\n' | grep -qx docker
+            docker info >/dev/null
+
+            echo "─── Pull Latest Code ───"
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+            test -f docker-compose.yml
+            docker compose -f docker-compose.yml config --quiet
+
+            echo "─── Create Runtime .env ───"
+            cat > .env <<'ENV_FILE'
             MONGO_URI=${{ secrets.MONGO_URI }}
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             SESSION_EXPIRES_IN=${{ secrets.SESSION_EXPIRES_IN }}
@@ -143,23 +162,67 @@ jobs:
             TLS_KEY_PATH=/etc/letsencrypt/live/teamsyncin.duckdns.org/privkey.pem
             GF_ADMIN_USER=${{ secrets.GF_ADMIN_USER }}
             GF_ADMIN_PASSWORD=${{ secrets.GF_ADMIN_PASSWORD }}
-            EOF
+            ENV_FILE
+            chmod 600 .env
+            test -s .env
+            for required_key in \
+              MONGO_URI \
+              SESSION_SECRET \
+              SESSION_EXPIRES_IN \
+              GOOGLE_CLIENT_ID \
+              GOOGLE_CLIENT_SECRET \
+              GOOGLE_CALLBACK_URL \
+              FRONTEND_ORIGIN \
+              FRONTEND_GOOGLE_CALLBACK_URL \
+              VITE_API_BASE_URL \
+              TLS_CERT_PATH \
+              TLS_KEY_PATH \
+              GF_ADMIN_USER \
+              GF_ADMIN_PASSWORD
+            do
+              grep -Eq "^${required_key}=.+$" .env
+            done
 
-            test -s /etc/letsencrypt/live/teamsyncin.duckdns.org/fullchain.pem
-            test -s /etc/letsencrypt/live/teamsyncin.duckdns.org/privkey.pem
+            echo "─── Verify TLS Certificates ───"
+            test -s "${TLS_CERT_PATH}"
+            test -s "${TLS_KEY_PATH}"
+            if command -v openssl >/dev/null 2>&1; then
+              openssl x509 -in "${TLS_CERT_PATH}" -noout -subject -issuer -dates
+            fi
 
-            # Build and restart containers
-            docker compose pull || true
+            echo "─── Build And Restart Containers ───"
             docker compose down
             docker compose build --no-cache
-            docker compose up -d --force-recreate
+            docker compose up -d --force-recreate --remove-orphans
 
-            # Verify deployment
-            sleep 10
+            echo "─── Wait For Healthy Containers ───"
+            for attempt in {1..36}; do
+              backend_health="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' teamsync-backend)"
+              client_health="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' teamsync-client)"
+              if [ "${backend_health}" = "healthy" ] && [ "${client_health}" = "healthy" ]; then
+                echo "✅ Backend and client are healthy"
+                break
+              fi
+              if [ "${attempt}" -eq 36 ]; then
+                docker compose ps
+                docker logs --tail=120 teamsync-backend
+                docker logs --tail=120 teamsync-client
+                echo "❌ Containers did not become healthy" >&2
+                exit 1
+              fi
+              echo "Waiting for health checks... backend=${backend_health}, client=${client_health}"
+              sleep 5
+            done
+
+            echo "─── Verify Deployment Health ───"
+            docker compose ps
             curl -fsSk https://localhost/api/health
+            curl -fsSk https://localhost/ >/dev/null
+            redirect_location="$(curl -fsSI http://localhost/ | awk 'BEGIN{IGNORECASE=1} /^location:/ {print $2}' | tr -d '\r')"
+            test "${redirect_location}" = "https://localhost/"
 
-            # Cleanup old images
-            docker image prune -f
+            echo "─── Cleanup Old Docker Images ───"
+            docker image prune -f || echo "⚠️ Docker image prune failed; deployment is already healthy"
 
             echo "✅ Deployment complete!"
 
@@ -171,10 +234,21 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 5m
           script: |
+            set -euo pipefail
+            APP_DIR="/home/ubuntu/teamsync-devops"
+            test -d "${APP_DIR}"
+            test -f "${APP_DIR}/docker-compose.yml"
+            cd "${APP_DIR}"
+
             echo "─── Container Status ───"
-            docker compose -f /home/ubuntu/TeamSync/docker-compose.yml ps
+            docker compose -f docker-compose.yml ps
             echo ""
             echo "─── Health Check ───"
-            curl -fsSk https://localhost/api/health | head -c 200
+            health_response="$(curl -fsSk https://localhost/api/health)"
+            echo "${health_response}" | head -c 200
+            echo ""
+            curl -fsSk https://localhost/ >/dev/null
+            redirect_location="$(curl -fsSI http://localhost/ | awk 'BEGIN{IGNORECASE=1} /^location:/ {print $2}' | tr -d '\r')"
+            test "${redirect_location}" = "https://localhost/"
             echo ""
             echo "✅ All systems operational"
