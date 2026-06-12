@@ -229,8 +229,8 @@ jobs:
 
             echo "─── Verify TLS Certificates ───"
             echo "DEBUG: tls existence check start"
-            test -s "${TLS_CERT_PATH}"
-            test -s "${TLS_KEY_PATH}"
+            sudo test -s "${TLS_CERT_PATH}"
+            sudo test -s "${TLS_KEY_PATH}"
             echo "DEBUG: tls existence check complete"
 
             echo "─── Build And Restart Containers ───"
