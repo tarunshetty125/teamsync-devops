@@ -228,9 +228,6 @@ jobs:
             echo "─── Verify TLS Certificates ───"
             test -s "${TLS_CERT_PATH}"
             test -s "${TLS_KEY_PATH}"
-            if command -v openssl >/dev/null 2>&1; then
-              openssl x509 -in "${TLS_CERT_PATH}" -noout -subject -issuer -dates
-            fi
 
             echo "─── Build And Restart Containers ───"
             docker compose down
