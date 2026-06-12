@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import { Request, Response } from "express";
 import { HTTPSTATUS } from "../config/http.config";
 import { ErrorCodeEnum } from "../enums/error-code.enum";
 import { config } from "../config/app.config";
@@ -17,18 +18,29 @@ export const generalApiRateLimiter = rateLimit({
   },
 });
 
-export const authRateLimiter = rateLimit({
+const authRateLimitHandler = (_req: Request, res: Response) => {
+  res.status(HTTPSTATUS.TOO_MANY_REQUESTS).json({
+    message: "Too many authentication attempts. Please try again later.",
+    errorCode: ErrorCodeEnum.ACCESS_UNAUTHORIZED,
+  });
+};
+
+export const loginAuthRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTests,
-  handler: (_req, res) => {
-    res.status(HTTPSTATUS.TOO_MANY_REQUESTS).json({
-      message: "Too many authentication attempts. Please try again later.",
-      errorCode: ErrorCodeEnum.ACCESS_UNAUTHORIZED,
-    });
-  },
+  handler: authRateLimitHandler,
+});
+
+export const registerAuthRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTests,
+  handler: authRateLimitHandler,
 });
 
 export const writeApiRateLimiter = rateLimit({

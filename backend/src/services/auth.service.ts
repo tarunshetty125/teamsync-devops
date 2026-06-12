@@ -169,13 +169,13 @@ export const verifyUserService = async ({
 }) => {
   const account = await AccountModel.findOne({ provider, providerId: email });
   if (!account) {
-    throw new NotFoundException("Invalid email or password");
+    throw new UnauthorizedException("Invalid email or password");
   }
 
   const user = await UserModel.findById(account.userId).select("+password");
 
   if (!user) {
-    throw new NotFoundException("User not found for the given account");
+    throw new UnauthorizedException("Invalid email or password");
   }
 
   const isMatch = await user.comparePassword(password);

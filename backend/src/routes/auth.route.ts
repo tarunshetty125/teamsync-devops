@@ -9,7 +9,8 @@ import {
   registerUserController,
 } from "../controllers/auth.controller";
 import {
-  authRateLimiter,
+  loginAuthRateLimiter,
+  registerAuthRateLimiter,
   writeApiRateLimiter,
 } from "../middlewares/rateLimit.middleware";
 import isAuthenticated from "../middlewares/isAuthenticated.middleware";
@@ -35,8 +36,8 @@ const requireGoogleOAuth = (
 };
 
 authRoutes.get("/config", getAuthConfigController);
-authRoutes.post("/register", authRateLimiter, registerUserController);
-authRoutes.post("/login", authRateLimiter, loginController);
+authRoutes.post("/register", registerAuthRateLimiter, registerUserController);
+authRoutes.post("/login", loginAuthRateLimiter, loginController);
 
 authRoutes.post("/logout", isAuthenticated, writeApiRateLimiter, logOutController);
 
