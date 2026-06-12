@@ -162,7 +162,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 20m
           script: |
-            set -euo pipefail
+            set -euxo pipefail
             trap 'echo "❌ Deployment failed on line ${LINENO}" >&2' ERR
 
             APP_DIR="/home/ubuntu/teamsync-devops"
@@ -223,11 +223,15 @@ jobs:
             done
 
             echo "─── Validate Docker Compose Config ───"
+            echo "DEBUG: compose validation start"
             docker compose --env-file .env -f docker-compose.yml config --quiet
+            echo "DEBUG: compose validation complete"
 
             echo "─── Verify TLS Certificates ───"
+            echo "DEBUG: tls existence check start"
             test -s "${TLS_CERT_PATH}"
             test -s "${TLS_KEY_PATH}"
+            echo "DEBUG: tls existence check complete"
 
             echo "─── Build And Restart Containers ───"
             docker compose down
