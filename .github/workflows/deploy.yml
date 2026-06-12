@@ -114,6 +114,46 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
+      - name: 🔐 Validate Deployment Secrets
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          SESSION_EXPIRES_IN: ${{ secrets.SESSION_EXPIRES_IN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL }}
+          FRONTEND_ORIGIN: ${{ secrets.FRONTEND_ORIGIN }}
+          FRONTEND_GOOGLE_CALLBACK_URL: ${{ secrets.FRONTEND_GOOGLE_CALLBACK_URL }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          GF_ADMIN_USER: ${{ secrets.GF_ADMIN_USER }}
+          GF_ADMIN_PASSWORD: ${{ secrets.GF_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for required_secret in \
+            MONGO_URI \
+            SESSION_SECRET \
+            SESSION_EXPIRES_IN \
+            GOOGLE_CLIENT_ID \
+            GOOGLE_CLIENT_SECRET \
+            GOOGLE_CALLBACK_URL \
+            FRONTEND_ORIGIN \
+            FRONTEND_GOOGLE_CALLBACK_URL \
+            VITE_API_BASE_URL \
+            GF_ADMIN_USER \
+            GF_ADMIN_PASSWORD
+          do
+            if [ -z "${!required_secret:-}" ]; then
+              missing+=("${required_secret}")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "❌ Missing required GitHub Actions secrets:"
+            printf ' - %s\n' "${missing[@]}"
+            exit 1
+          fi
+
       - name: 🚀 Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -145,7 +185,6 @@ jobs:
             git checkout main
             git pull --ff-only origin main
             test -f docker-compose.yml
-            docker compose -f docker-compose.yml config --quiet
 
             echo "─── Create Runtime .env ───"
             cat > .env <<'ENV_FILE'
@@ -182,6 +221,9 @@ jobs:
             do
               grep -Eq "^${required_key}=.+$" .env
             done
+
+            echo "─── Validate Docker Compose Config ───"
+            docker compose --env-file .env -f docker-compose.yml config --quiet
 
             echo "─── Verify TLS Certificates ───"
             test -s "${TLS_CERT_PATH}"
