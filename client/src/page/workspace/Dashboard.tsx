@@ -256,22 +256,26 @@ const HistogramChartCard = ({
         <EmptyState label="No chart data yet." />
       ) : (
         <div className="space-y-3">
-          <div className="flex h-28 items-end gap-1.5 rounded-md border bg-muted/20 p-3">
-            {normalized.map((item) => (
-              <div
-                key={item.label}
-                className="flex flex-1 items-end"
-                title={`${item.label}: ${item.value}`}
-              >
+          <div className="relative h-28 overflow-hidden rounded-md border bg-muted/20 p-3">
+            <div className="pointer-events-none absolute inset-x-3 top-1/3 border-t border-dashed border-border/70" />
+            <div className="pointer-events-none absolute inset-x-3 top-2/3 border-t border-dashed border-border/70" />
+            <div className="relative z-10 flex h-full items-end gap-1.5">
+              {normalized.map((item) => (
                 <div
-                  className="w-full rounded-t-sm"
-                  style={{
-                    height: `${Math.max(10, (item.value / max) * 100)}%`,
-                    backgroundColor: item.color,
-                  }}
-                />
-              </div>
-            ))}
+                  key={item.label}
+                  className="flex h-full flex-1 items-end"
+                  title={`${item.label}: ${item.value}`}
+                >
+                  <div
+                    className="min-h-2 w-full rounded-t-sm shadow-sm transition-all duration-200"
+                    style={{
+                      height: `${Math.max(10, (item.value / max) * 100)}%`,
+                      backgroundColor: item.color,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
           <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
             <span className="truncate">{normalized[0]?.label}</span>
