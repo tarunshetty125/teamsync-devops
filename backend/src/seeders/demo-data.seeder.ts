@@ -255,6 +255,9 @@ const oid = (key: string) =>
 const hashText = (value: string) =>
   crypto.createHash("sha256").update(value).digest("hex");
 
+const inviteCodeForWorkspace = (workspaceKey: string) =>
+  hashText(`${DEMO_PREFIX}:invite:${workspaceKey}`).slice(0, 8);
+
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
   next.setUTCDate(next.getUTCDate() + days);
@@ -475,7 +478,7 @@ const run = async () => {
     name: workspace.name,
     description: `${workspace.name} demo workspace with seeded projects, tasks, analytics, governance, and productivity history.`,
     owner: workspace.owner.id,
-    inviteCode: `DEMO-${pad(index + 1, 3)}`,
+    inviteCode: inviteCodeForWorkspace(workspace.key),
     createdAt: addDays(now, -160 + index),
     updatedAt: addDays(now, -index),
   }));
