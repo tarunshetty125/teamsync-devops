@@ -15,19 +15,19 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "rate(http_requests_total[5m])",
-          "legendFormat": "{{method}} {{route}} {{status_code}}"
+          "expr": "sum by (method, path, status_class) (rate(teamsync_http_requests_total[5m]))",
+          "legendFormat": "{{method}} {{path}} {{status_class}}"
         }
       ]
     },
     {
-      "title": "Response Time (p95)",
+      "title": "Average Response Time",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
-          "legendFormat": "p95 latency"
+          "expr": "sum by (method, path) (rate(teamsync_http_request_duration_ms_total[5m])) / sum by (method, path) (rate(teamsync_http_requests_total[5m]))",
+          "legendFormat": "{{method}} {{path}}"
         }
       ]
     },
@@ -37,7 +37,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
       "targets": [
         {
-          "expr": "active_connections",
+          "expr": "nginx_connections_active",
           "legendFormat": "connections"
         }
       ]
@@ -48,7 +48,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
       "targets": [
         {
-          "expr": "http_requests_total",
+          "expr": "sum(teamsync_http_requests_total)",
           "legendFormat": "total"
         }
       ]
@@ -59,19 +59,19 @@
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "process_resident_memory_bytes / 1024 / 1024",
+          "expr": "teamsync_process_memory_bytes{type=\"rss\"} / 1024 / 1024",
           "legendFormat": "RSS"
         }
       ]
     },
     {
-      "title": "Node.js Event Loop Lag",
+      "title": "Process Uptime",
       "type": "timeseries",
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
       "targets": [
         {
-          "expr": "nodejs_eventloop_lag_seconds",
-          "legendFormat": "lag"
+          "expr": "teamsync_process_uptime_seconds",
+          "legendFormat": "uptime"
         }
       ]
     }
@@ -83,5 +83,5 @@
   "time": { "from": "now-1h", "to": "now" },
   "title": "TeamSync DevOps Dashboard",
   "uid": "teamsync-main",
-  "version": 1
+  "version": 2
 }
