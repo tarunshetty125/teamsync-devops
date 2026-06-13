@@ -222,6 +222,18 @@ jobs:
               grep -Eq "^${required_key}=.+$" .env
             done
 
+            echo "─── Create Prometheus Basic Auth ───"
+            set +x
+            mkdir -p nginx
+            GF_ADMIN_USER_VALUE="$(sed -n 's/^GF_ADMIN_USER=//p' .env)"
+            GF_ADMIN_PASSWORD_VALUE="$(sed -n 's/^GF_ADMIN_PASSWORD=//p' .env)"
+            PROMETHEUS_PASSWORD_HASH="$(openssl passwd -apr1 "${GF_ADMIN_PASSWORD_VALUE}")"
+            printf '%s:%s\n' "${GF_ADMIN_USER_VALUE}" "${PROMETHEUS_PASSWORD_HASH}" > nginx/prometheus.htpasswd
+            chmod 600 nginx/prometheus.htpasswd
+            test -s nginx/prometheus.htpasswd
+            unset GF_ADMIN_USER_VALUE GF_ADMIN_PASSWORD_VALUE PROMETHEUS_PASSWORD_HASH
+            set -x
+
             echo "─── Validate Docker Compose Config ───"
             echo "DEBUG: compose validation start"
             docker compose --env-file .env -f docker-compose.yml config --quiet
@@ -261,6 +273,8 @@ jobs:
             docker compose ps
             curl -fsSk https://localhost/api/health
             curl -fsSk https://localhost/ >/dev/null
+            set +x
+            curl -fsSk -u "${{ secrets.GF_ADMIN_USER }}:${{ secrets.GF_ADMIN_PASSWORD }}" https://localhost/prometheus/-/healthy >/dev/null
             redirect_location="$(curl -fsSI http://localhost/ | awk 'BEGIN{IGNORECASE=1} /^location:/ {print $2}' | tr -d '\r')"
             test "${redirect_location}" = "https://localhost/"
 
@@ -291,6 +305,8 @@ jobs:
             echo "${health_response}" | head -c 200
             echo ""
             curl -fsSk https://localhost/ >/dev/null
+            set +x
+            curl -fsSk -u "${{ secrets.GF_ADMIN_USER }}:${{ secrets.GF_ADMIN_PASSWORD }}" https://localhost/prometheus/-/healthy >/dev/null
             redirect_location="$(curl -fsSI http://localhost/ | awk 'BEGIN{IGNORECASE=1} /^location:/ {print $2}' | tr -d '\r')"
             test "${redirect_location}" = "https://localhost/"
             echo ""
