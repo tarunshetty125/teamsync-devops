@@ -99,6 +99,20 @@ services:
     networks:
       - teamsync-network
 
+  # ─── Nginx Prometheus Exporter ──────────────────────────
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: teamsync-nginx-exporter
+    restart: unless-stopped
+    expose:
+      - "9113"
+    command:
+      - '--nginx.scrape-uri=http://nginx/nginx_status'
+    depends_on:
+      - nginx
+    networks:
+      - teamsync-network
+
   # ─── Grafana (Metrics Dashboard) ────────────────────────
   grafana:
     image: grafana/grafana:latest

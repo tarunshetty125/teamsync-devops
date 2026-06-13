@@ -13,6 +13,7 @@ global:
 scrape_configs:
   # ─── Prometheus Self-Monitoring ────────────────────────
   - job_name: 'prometheus'
+    metrics_path: '/prometheus/metrics'
     static_configs:
       - targets: ['localhost:9090']
         labels:
@@ -29,12 +30,11 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_interval: 10s
 
-  # ─── Nginx Metrics (via stub_status) ───────────────────
-  # Requires nginx-prometheus-exporter sidecar
+  # ─── Nginx Metrics (via nginx-prometheus-exporter) ─────
   - job_name: 'nginx'
     static_configs:
-      - targets: ['nginx:80']
+      - targets: ['nginx-exporter:9113']
         labels:
           service: 'nginx'
-    metrics_path: '/nginx_status'
+    metrics_path: '/metrics'
     scrape_interval: 30s
